@@ -33,7 +33,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         get_phone_number = attrs.get('phone_number',None)
         get_employee_number = attrs.get('employee_number',None)
         get_password = attrs.get('password',None)
-        get_profile_image = attrs.get('profile_image',None)
+        # get_profile_image = attrs.get('profile_image',None)
 
 
         if get_username is None or get_username == '':
@@ -57,8 +57,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         if len(get_password) < 8:
             raise serializers.ValidationError({"Error":"Password must contain min 8 characters"})
 
-        if get_profile_image is None or get_profile_image == '':
-            raise serializers.ValidationError({'error':'profile_image field is required!'})
+        # if get_profile_image is None or get_profile_image == '':
+        #     raise serializers.ValidationError({'error':'profile_image field is required!'})
         
         return attrs
 
