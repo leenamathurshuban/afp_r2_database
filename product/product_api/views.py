@@ -12,6 +12,9 @@ from product.models import (
 from product.product_api.serializers import (
     WareHouseSerializer
 )
+import uuid
+import barcode
+from barcode.writer import ImageWriter
 
 
 # Create your views here.
@@ -32,7 +35,6 @@ class PostWareHouse(APIView):
 
         except Exception as exception:
             return get_exception_context(str(exception))
-
     
  
 class UpdateWareHouse(APIView):    
@@ -50,7 +52,6 @@ class UpdateWareHouse(APIView):
                     return get_exception_context(serializer_error)
             except Exception as exception:
                 return get_exception_context(str(exception))
-            
 
 
 class GetWareHouseList(APIView):   
@@ -94,3 +95,28 @@ class DetailWareHouse(APIView):
              return get_exception_context(str(exception))
 
 # Worked on above code 27/05/2024 By Tasmiya
+
+
+class generate_barcode(APIView):
+
+    def get(self, request, *args, **kwargs):
+        # Make sure to pass the number as string 
+        number = "AFP0001"
+        ary = {}
+        # barcode_writer = ImageWriter()
+
+        ean = barcode.codex.Code39(ary, add_checksum=False)
+
+        unique_filename = uuid.uuid4()
+
+        filename = ean.save(f'{number}')
+        
+        # Now, let's create an object of EAN13 
+        # class and pass the number 
+        # my_code = Code128(number)
+        
+        # Our barcode is ready. Let's save it. 
+        # file = my_code.save("new")
+
+        return Response(filename)
+

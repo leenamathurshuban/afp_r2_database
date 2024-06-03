@@ -4,7 +4,10 @@ from product.product_api.views import (
     UpdateWareHouse,
     GetWareHouseList,
     DeleteWareHouse,
-    DetailWareHouse
+    DetailWareHouse,
+
+    generate_barcode, # For testing Purpose
+
 )
 
 urlpatterns = [
@@ -13,5 +16,7 @@ path('ware-house-update-api/<str:uid>/',UpdateWareHouse.as_view(),name="role-upd
 path('ware-house-list-api/',GetWareHouseList.as_view(),name='ware-house-get-api'),
 path('ware-house-delete-api/<str:uid>/',DeleteWareHouse.as_view(),name='ware-house-delete-api'),
 path('ware-house-detail-api/<str:uid>/',DetailWareHouse.as_view(),name='ware-house-detail-api'),
+
+path('bar-code/',generate_barcode.as_view()), # For testing Purpose
 
 ]

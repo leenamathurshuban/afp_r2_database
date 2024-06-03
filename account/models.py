@@ -61,11 +61,6 @@ class User(AbstractUser):
     class Meta:
         verbose_name_plural = "User"
 
-    def save(self, *args, **kwargs):
-        if self.first_name and self.last_name:
-            if not self.afp_code:
-                self.afp_code = get_unique_code(self.first_name, self.last_name)
-        super(User, self).save(*args, **kwargs)
-
-
+    # def save(self, *args, **kwargs):
+    #     super(User, self).save(*args, **kwargs)
 

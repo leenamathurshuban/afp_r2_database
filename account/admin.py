@@ -16,6 +16,5 @@ class RoleAdmin(admin.ModelAdmin):
     list_display = ['role_uid','role_name','status']
 
 
-
 admin.site.register(User,UserAdmin)
 admin.site.register(Role,RoleAdmin)
