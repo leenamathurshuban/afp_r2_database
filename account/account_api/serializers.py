@@ -37,28 +37,28 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 
         if get_username is None or get_username == '':
-            raise serializers.ValidationError({'error':'username field is required!'})
+            raise serializers.ValidationError({'username':'username field is required!'})
 
         if get_first_name is None or get_first_name == '':
-            raise serializers.ValidationError({'error':'first_name field is required!'})
+            raise serializers.ValidationError({'first_name':'first_name field is required!'})
 
         if get_last_name is None or get_last_name == '':
-            raise serializers.ValidationError({'error':'last_name field is required!'})
+            raise serializers.ValidationError({'last_name':'last_name field is required!'})
 
         if get_role_uid is None or get_role_uid == '':
-            raise serializers.ValidationError({'error':'role_uid field is required!'})
+            raise serializers.ValidationError({'role_uid':'role_uid field is required!'})
 
         if get_phone_number is None or get_phone_number == '':
-            raise serializers.ValidationError({'error':'phone_number field is required!'})
+            raise serializers.ValidationError({'phone_number':'phone_number field is required!'})
 
         if get_password is None or get_password == '':
-            raise serializers.ValidationError({'error':'password field is required!'})
+            raise serializers.ValidationError({'password':'password field is required!'})
         
         if len(get_password) < 8:
-            raise serializers.ValidationError({"Error":"Password must contain min 8 characters"})
+            raise serializers.ValidationError({"password":"Password must contain min 8 characters"})
 
         # if get_profile_image is None or get_profile_image == '':
-        #     raise serializers.ValidationError({'error':'profile_image field is required!'})
+        #     raise serializers.ValidationError({'profile_image':'profile_image field is required!'})
         
         return attrs
 
@@ -124,15 +124,15 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             get_user_obj = User.objects.filter(username__iexact = attrs['username']).exclude(username = user.username)
             print('get_user_obj:-=====', attrs['username'])
             if get_user_obj:
-                raise serializers.ValidationError({'error':'Enter a valid Username!'})
+                raise serializers.ValidationError({'username':'Enter a valid Username!'})
         
         if get_password  is not None:
             if len(attrs['password']) < 8:
-                raise serializers.ValidationError({"error":"Password must contain min 8 characters!"})
+                raise serializers.ValidationError({"password":"Password must contain min 8 characters!"})
             
         if get_old_password is not None:
             if not user.check_password(attrs['old_password']):
-                raise serializers.ValidationError({"error": "Current password is not correct"})
+                raise serializers.ValidationError({"old_password": "Current password is not correct"})
         return attrs
     
     def update(self,instance,validated_data):
@@ -161,16 +161,43 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
-        fields = ['id','role_uid','role_name']
+        fields = ['id','role_uid','role_name','image','status']
     
     
     def validate(self, attrs):
        get_role_name = attrs.get('role_name',None)
+       get_role_image = attrs.get('image',None)
+       get_role_status = attrs.get('status',None)
+
 
        if get_role_name is None or get_role_name == '':
-           raise serializers.ValidationError({'error':'role_name field is required!'})
-       return attrs
+           raise serializers.ValidationError({'role_name':'role_name is required!'})
+       
+    #    if get_role_image is None or get_role_image == '':
+    #        raise serializers.ValidationError({'image':'image is required'}) 
 
+       get_role_obj = Role.objects.filter(role_name__icontains=get_role_name)
+
+       if get_role_obj.exists():
+            raise serializers.ValidationError({'role_name':'role with this name already exists!'})
+
+       
+       if get_role_status is None or get_role_status == '':
+           raise serializers.ValidationError({'status':'status is required'})    
+       return attrs
+    
+class RoleUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['id','role_uid','role_name','image','status']
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    user_role = RoleSerializer()
+    class Meta:
+        model = User
+        fields = ['id','user_uid','username','first_name','last_name','email','user_role','phone_number','profile_image',
+                  'employee_number','afp_code','created_at','updated_at']
 
 class UserListSerializer(serializers.ModelSerializer):
     user_role = RoleSerializer()

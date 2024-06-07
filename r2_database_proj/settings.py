@@ -140,8 +140,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'r2_database_proj.wsgi.application'
 
 CSRF_TRUSTED_ORIGINS=['https://r2api.visionarytechsol.com']
-
-
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 

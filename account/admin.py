@@ -2,7 +2,7 @@ from django.contrib import admin
 from account.models import (
     Role,
     User,
-    
+   
 )
 
 # Register your models here.
@@ -13,7 +13,7 @@ class UserAdmin(admin.ModelAdmin):
     search_fields = ['username','user_role__role_name','first_name','last_name']
 
 class RoleAdmin(admin.ModelAdmin):
-    list_display = ['role_uid','role_name']
+    list_display = ['role_uid','role_name','status']
 
 
 admin.site.register(User,UserAdmin)
