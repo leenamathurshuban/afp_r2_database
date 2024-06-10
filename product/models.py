@@ -1,12 +1,14 @@
 from django.db import models
 import uuid,os,shutil
+import barcode
 from account.models import (
     User
 )
-# # Create your models here.
+
+# Create your models here.
 
 class BaseModel(models.Model):
-    uid = models.UUIDField(default=uuid.uuid4, editable=False, blank=True,unique=True)
+    uid = models.UUIDField(editable=False,default=uuid.uuid4,unique=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -64,6 +66,23 @@ class Product(BaseModel):
     
     class Meta:
         verbose_name_plural = 'Product'
+
+    
+    # def save(self, *args, **kwargs):
+
+    #     if self.id:
+    #         number = f"AFP000{self.id}"
+        
+    #     else:
+    #         number = "AFP0001"
+
+    #     ean = barcode.codex.Code39(number, add_checksum=False)
+    #     unique_filename = uuid.uuid4()
+    #     filename = ean.save(unique_filename)
+    #     if not self.bar_code:
+    #         self.bar_code = filename
+
+    #     return super(Product, self).save(*args, **kwargs)
 
 
 class ProductImage(BaseModel):

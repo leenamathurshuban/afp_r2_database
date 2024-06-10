@@ -46,8 +46,8 @@ class RegisterAPI(APIView):
                 return get_serializer_context(serializer.data)
             
             else:
-                serializer_error = [serializer.errors[error][0] for error in serializer.errors]
-                return get_exception_context(serializer_error)
+                # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
+                return get_exception_context(serializer.errors)
 
         except Exception as exception:
             return get_exception_context(str(exception))
@@ -103,8 +103,8 @@ class UserUpdateView(APIView):
                 serializer.save()
                 return get_serializer_context(serializer.data)
             else:
-                serializer_error = [serializer.errors[error][0] for error in serializer.errors]
-                return get_exception_context(serializer_error)
+                # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
+                return get_exception_context(serializer.errors)
 
         except Exception as exception:
             return get_exception_context(str(exception))
@@ -162,7 +162,7 @@ class RoleGetApi(APIView):
 
     def get(self,request):
         try:
-            get_role = Role.objects.all()
+            get_role = Role.objects.all().order_by('-id')
             serializer = RoleSerializer(get_role,many=True)
             return get_serializer_context(serializer.data)      
         except Exception as exception:
@@ -208,8 +208,8 @@ class UserdetailApi(APIView):
                 serializer = UserDetailSerializer(get_object)
                 return get_serializer_context(serializer.data)
             except Exception as exception:
-                serializer_error = [serializer.errors[error][0] for error in serializer.errors]
-                return get_exception_context(serializer_error)
+                # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
+                return get_exception_context(serializer.errors)
         except Exception as exception:
              return get_exception_context(str(exception))
         
@@ -219,16 +219,15 @@ class UserdetailApi(APIView):
 class UserDeleteApi(APIView):
     def delete(self,request,*args,**kwargs):
         uuid = kwargs.get('uid', None)
-        if uuid:
+        try:
             try:
-                try:
-                    get_user = User.objects.get(user_uid=uuid)
-                    get_user.delete()
-                    return get_serializer_context('User Deleted Successfully !')
-                except Exception as exception:
-                    return get_exception_context('User matching query does not exist !')           
+                get_user = User.objects.get(user_uid=uuid)
+                get_user.delete()
+                return get_serializer_context('User Deleted Successfully !')
             except Exception as exception:
-                    return get_exception_context(str(exception))
+                return get_exception_context('User matching query does not exist !')           
+        except Exception as exception:
+                return get_exception_context(str(exception))
 
 # Worked on above code 27/05/2024 By Tasmiya
 

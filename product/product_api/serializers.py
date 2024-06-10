@@ -1,5 +1,9 @@
 from rest_framework import serializers
-from product.models import WareHouse,Product,ProductImage
+from product.models import (
+    WareHouse,
+    Product,
+    ProductImage
+)
 from account.models import (
     User
 )
@@ -14,7 +18,7 @@ class WareHouseSerializer(serializers.ModelSerializer):
        get_warehouse_name = attrs.get('warehouse_name',None)
 
        if get_warehouse_name is None or get_warehouse_name == '':
-           raise serializers.ValidationError({'error':'Ware House name is required'})
+           raise serializers.ValidationError({'warehouse_name':'warehouse_name is required'})
            
        return attrs
     
@@ -23,88 +27,87 @@ class UpdateWareHouseSerializer(serializers.ModelSerializer):
         model = WareHouse
         fields = ['id','uid','warehouse_name']
 
+class UpdateWareHouseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WareHouse
+        fields = ['id','uid','warehouse_name']
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    warehouse_uid = serializers.CharField()
+       
     class Meta:
         model = Product
         fields = '__all__'
 
-
     def validate(self, attrs):
-        get_wareHouse = attrs.get('warehouse_uid',None)
-      #   print('get_wareHouse===',get_wareHouse)
-      #   print('attrs==',attrs)
-        get_serial_number = attrs.get('serial_number',None)
-        get_year = attrs.get('year',None)
-        get_product_size = attrs.get('product_size',None)
-        get_device_type =attrs.get('device_type',None)
-        get_product_status = attrs.get('product_status',None)
-        get_model_number = attrs.get('model_number',None)
-        get_emc_number = attrs.get('emc_number',None)
-        get_model_family = attrs.get('model_family',None)
-        get_memory = attrs.get('memory',None)
-        get_storage_type = attrs.get('storage_type',None)
-        get_storage_size = attrs.get('storage_size',None)
-        get_battery_capacity = attrs.get('battery_capacity',None)
-        get_battery_cycles = attrs.get('battery_cycles',None)
-        get_grade = attrs.get('grade',None)
-        get_grade_notes = attrs.get('grade_notes',None)
-        get_technical_notes = attrs.get('technical_notes',None)
+      
+         get_serial_number = attrs.get('serial_number',None)
+         get_year = attrs.get('year',None)
+         get_product_size = attrs.get('product_size',None)
+         get_device_type =attrs.get('device_type',None)
+         get_product_status = attrs.get('product_status',None)
+         get_model_number = attrs.get('model_number',None)
+         get_emc_number = attrs.get('emc_number',None)
+         get_model_family = attrs.get('model_family',None)
+         get_memory = attrs.get('memory',None)
+         get_storage_type = attrs.get('storage_type',None)
+         get_storage_size = attrs.get('storage_size',None)
+         get_battery_capacity = attrs.get('battery_capacity',None)
+         get_battery_cycles = attrs.get('battery_cycles',None)
+         get_grade = attrs.get('grade',None)
+         get_grade_notes = attrs.get('grade_notes',None)
+         get_technical_notes = attrs.get('technical_notes',None)
 
-        if get_wareHouse is None or get_wareHouse == '':
-           raise serializers.ValidationError({'warehouse_uid':'warehouse_uid is required'})
-        
-        if get_serial_number is None or get_serial_number == '':
-           raise serializers.ValidationError({'serial_number':'serial_number is required'})
-        
-        if get_year is None or get_year == '':
-           raise serializers.ValidationError({'year':'year is required'})
-        
-        if get_product_size is None or get_product_size == '':
-           raise serializers.ValidationError({'product_size':'product_size is required'})
-        
-        if get_device_type is None or get_device_type == '':
-           raise serializers.ValidationError({'device_type':'device_type is required'})
-        
-        if get_product_status is None or get_product_status == '':
-           raise serializers.ValidationError({'product_status':'product_status is required'})
-        
-        if get_model_number is None or get_model_number == '':
-           raise serializers.ValidationError({'model_number':'model_number is required'})
-        
-        if get_emc_number is None or get_emc_number == '':
-           raise serializers.ValidationError({'emc_number':'emc_number is required'})
-        
-        if get_model_family is None or get_model_family == '':
-           raise serializers.ValidationError({'model_family':'model_family is required'})
-        
-        if get_memory is None or get_memory == '':
-           raise serializers.ValidationError({'memory':'memory is required'})
-        
-        if get_storage_type is None or get_storage_type == '':
-           raise serializers.ValidationError({'storage_type':'storage_type is required'})
-        
-        if get_storage_size is None or get_storage_size == '':
-           raise serializers.ValidationError({'storage_size':'storage_size is required'})
-        
-        if get_battery_capacity is None or get_battery_capacity == '':
-           raise serializers.ValidationError({'battery_capacity':'battery_capacity is required'})
-        
-        if get_battery_cycles is None or get_battery_cycles == '':
-           raise serializers.ValidationError({'battery_cycles':'battery_cycles is required'})
-        
-        if get_grade is None or get_grade == '':
-           raise serializers.ValidationError({'grade':'grade is required'})
-        
-        if get_grade_notes is None or get_grade_notes == '':
-           raise serializers.ValidationError({'grade_notes':'grade_notes is required'})
-        
-        if get_technical_notes is None or get_technical_notes == '':
-           raise serializers.ValidationError({'technical_notes':'technical_notes is required'})
-        
-        get_product_instance = Product.objects.filter(warehouse= attrs['warehouse'],
+         
+         if get_serial_number is None or get_serial_number == '':
+            raise serializers.ValidationError({'serial_number':'serial_number is required'})
+         
+         if get_year is None or get_year == '':
+            raise serializers.ValidationError({'year':'year is required'})
+         
+         if get_product_size is None or get_product_size == '':
+            raise serializers.ValidationError({'product_size':'product_size is required'})
+         
+         if get_device_type is None or get_device_type == '':
+            raise serializers.ValidationError({'device_type':'device_type is required'})
+         
+         if get_product_status is None or get_product_status == '':
+            raise serializers.ValidationError({'product_status':'product_status is required'})
+         
+         if get_model_number is None or get_model_number == '':
+            raise serializers.ValidationError({'model_number':'model_number is required'})
+         
+         if get_emc_number is None or get_emc_number == '':
+            raise serializers.ValidationError({'emc_number':'emc_number is required'})
+         
+         if get_model_family is None or get_model_family == '':
+            raise serializers.ValidationError({'model_family':'model_family is required'})
+         
+         if get_memory is None or get_memory == '':
+            raise serializers.ValidationError({'memory':'memory is required'})
+         
+         if get_storage_type is None or get_storage_type == '':
+            raise serializers.ValidationError({'storage_type':'storage_type is required'})
+         
+         if get_storage_size is None or get_storage_size == '':
+            raise serializers.ValidationError({'storage_size':'storage_size is required'})
+         
+         if get_battery_capacity is None or get_battery_capacity == '':
+            raise serializers.ValidationError({'battery_capacity':'battery_capacity is required'})
+         
+         if get_battery_cycles is None or get_battery_cycles == '':
+            raise serializers.ValidationError({'battery_cycles':'battery_cycles is required'})
+         
+         if get_grade is None or get_grade == '':
+            raise serializers.ValidationError({'grade':'grade is required'})
+         
+         if get_grade_notes is None or get_grade_notes == '':
+            raise serializers.ValidationError({'grade_notes':'grade_notes is required'})
+         
+         if get_technical_notes is None or get_technical_notes == '':
+            raise serializers.ValidationError({'technical_notes':'technical_notes is required'})
+            
+         get_product_instance = Product.objects.filter(warehouse= attrs['warehouse'],
                                                       serial_number=get_serial_number,
                                                       device_type= get_device_type,
                                                       product_status='CHECKED-IN',
@@ -113,11 +116,13 @@ class ProductSerializer(serializers.ModelSerializer):
                                                       storage_size= get_storage_size,
                                                       )
 
-        if get_product_instance.exists():
+         if get_product_instance.exists():
                raise serializers.ValidationError({'error':'Product already Checked-in!'})
            
-        return attrs
+         return attrs
 
+
+# Added below code on 05/06/2024
 class UserListSerializerForProduct(serializers.ModelSerializer):
 
     class Meta:
@@ -184,7 +189,7 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
       instance.face_time_camera = validated_data.get('face_time_camera',instance.face_time_camera)
       instance.find_my_mac = validated_data.get('find_my_mac',instance.find_my_mac)
       instance.mdm = validated_data.get('mdm',instance.mdm)
-      instance.warehouse.uid = validated_data.get('warehouse',instance.warehouse.uid)
+      instance.warehouse = validated_data.get('warehouse',instance.warehouse.uid)
       print('instance.warehouse=====',instance.warehouse.uid)
       instance.save()
 
@@ -211,3 +216,16 @@ class ProductdetailSerializer(serializers.ModelSerializer):
       class Meta:
          model = Product
          fields = '__all__'
+
+
+class GetProductListSerializer(serializers.ModelSerializer):
+    warehouse = WareHouseSerializer()
+    created_by = UserListSerializerForProduct()
+    product_image = ProductImageSerializer(many=True)
+
+    class Meta:
+        model = Product
+        fields = '__all__'
+# Added above code on 05/06/2024
+
+

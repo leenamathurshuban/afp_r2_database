@@ -15,7 +15,7 @@ from account.account_api.views import (
     RoleUpdateApi,
     RoleGetApi,
     RoleDeleteApi,
-    RoleDetailView
+    RoleDetailView,
     
 )
 

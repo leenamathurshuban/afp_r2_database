@@ -5,6 +5,8 @@ from product.product_api.views import (
     GetWareHouseList,
     DeleteWareHouse,
     DetailWareHouse,
+    ProductPostApi,
+    GetProductListAPI,
 
     ProductPostApi,
     ProductGetApi,
@@ -29,6 +31,7 @@ path('product-get-api/',ProductGetApi.as_view(),name='product-get-api'),
 path('product-delete-api/<str:uid>/',ProductDeleteApi.as_view(),name='product-delete-api'),
 path('product-update-api/<str:uid>/',ProductUpdateApi.as_view(),name='product-update-api'),
 path('product-detail-api/<str:uid>/',ProductDetailApi.as_view(),name='product-detail-api'),
+path('product-list-view/',GetProductListAPI.as_view(),name='product-list-view'),
 
 path('bar-code/',generate_barcode.as_view()), # For testing Purpose
 
