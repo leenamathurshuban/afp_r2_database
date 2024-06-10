@@ -171,13 +171,18 @@ class RoleSerializer(serializers.ModelSerializer):
        
 
        if get_role_name is None or get_role_name == '':
-           raise serializers.ValidationError({'error':'role name is required'})
+           raise serializers.ValidationError({'role_name':'role_name is required'})
        
-       if get_role_image is None or get_role_image == '':
-           raise serializers.ValidationError({'error':'image field is required'}) 
+    #    if get_role_image is None or get_role_image == '':
+        #    raise serializers.ValidationError({'error':'image field is required'}) 
+
+       get_role_obj = Role.objects.filter(role_name__icontains=get_role_name)
+
+       if get_role_obj.exists():
+            raise serializers.ValidationError({'role_name':'role with this name already exists!'})
        
        if get_role_status is None or get_role_status == '':
-           raise serializers.ValidationError({'error':'status is required'})    
+           raise serializers.ValidationError({'status':'status is required'})    
        return attrs
     
 class RoleUpdateSerializer(serializers.ModelSerializer):

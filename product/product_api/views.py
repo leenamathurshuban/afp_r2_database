@@ -7,11 +7,23 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from product.models import (
-    WareHouse
+    WareHouse,
+    Product,
+    ProductImage
 )
 from product.product_api.serializers import (
-    WareHouseSerializer
+    WareHouseSerializer,
+    UpdateWareHouseSerializer,
+
+    ProductSerializer,
+    ProductListSerializer,
+    ProductUpdateSerializer,
+    ProductdetailSerializer
 )
+from account.models import (
+    User
+)
+
 import uuid
 import barcode
 from barcode.writer import ImageWriter
@@ -30,8 +42,8 @@ class PostWareHouse(APIView):
                 serializer.save()
                 return get_serializer_context(serializer.data)
             else:
-                serializer_error = [serializer.errors[error][0] for error in serializer.errors]
-                return get_exception_context(serializer_error)
+                # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
+                return get_exception_context(serializer.errors)
 
         except Exception as exception:
             return get_exception_context(str(exception))
@@ -39,31 +51,29 @@ class PostWareHouse(APIView):
  
 class UpdateWareHouse(APIView):    
     def put(self, request,uid,*args,**kwargs):
-        uuid = kwargs.get('uid',None)
-        if uuid:       
-            try:
-                get_warehouse = WareHouse.objects.get(warehouse_uid=uuid)
-                serializer = WareHouseSerializer(get_warehouse,data=request.data,partial=True)
-                if serializer.is_valid():
-                    serializer.save()
-                    return get_serializer_context(serializer.data)
-                else:
-                    serializer_error = [serializer.errors[error][0] for error in serializer.errors]
-                    return get_exception_context(serializer_error)
-            except Exception as exception:
-                return get_exception_context(str(exception))
+
+        # uuid = kwargs.get('uid',None) 
+        try:
+            get_warehouse = WareHouse.objects.get(uid=uid)
+            print('get_warehouse===',get_warehouse)
+            print('uid====',uid)
+            serializer = UpdateWareHouseSerializer(get_warehouse,data=request.data,partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return get_serializer_context(serializer.data)
+            else:
+                # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
+                return get_exception_context(serializer.errors)
+        except Exception as exception:
+            return get_exception_context(str(exception))
 
 
 class GetWareHouseList(APIView):   
     def get(self,request,*args,**kwargs):
         try:
-            get_warehouse = WareHouse.objects.all()
+            get_warehouse = WareHouse.objects.all().order_by('-id')
             serializer =WareHouseSerializer(get_warehouse,many=True)
-            if serializer:
-                return get_serializer_context(serializer.data)
-            else:  
-                serializer_error = [serializer.errors[error][0] for error in serializer.errors]
-                return get_exception_context(serializer_error)
+            return get_serializer_context(serializer.data)
         except Exception as exception:
             return get_exception_context(str(exception))
         
@@ -72,7 +82,7 @@ class DeleteWareHouse(APIView):
     def delete(self,request,uid,*args,**kwargs):
         try:
             try:
-                get_warehouse = WareHouse.objects.get(warehouse_uid=uid)
+                get_warehouse = WareHouse.objects.get(uid=uid)
                 get_warehouse.delete()
                 return get_serializer_context('Ware House Deleted Successfully !')
             except Exception as exception:
@@ -84,13 +94,9 @@ class DeleteWareHouse(APIView):
 class DetailWareHouse(APIView):  
     def get(self,request,uid,*args,**kwargs):
         try:
-            get_warehouse = WareHouse.objects.get(warehouse_uid=uid)
+            get_warehouse = WareHouse.objects.get(uid=uid)
             serializer = WareHouseSerializer(get_warehouse)
-            if get_warehouse:
-                return get_serializer_context(serializer.data)
-            else:  
-                serializer_error = [serializer.errors[error][0] for error in serializer.errors]
-                return get_exception_context(serializer_error)
+            return get_serializer_context(serializer.data)
         except Exception as exception:
              return get_exception_context(str(exception))
 
@@ -120,3 +126,95 @@ class generate_barcode(APIView):
 
         return Response(filename)
 
+
+class ProductPostApi(APIView):
+    def post(self,request,*args,**Kwargs):
+        try:
+            get_warehouse = request.data.get('warehouse_uid',None)
+            if get_warehouse is None or get_warehouse == '':
+                return get_exception_context({'warehouse_uid':['warehouse_uid is required']})     
+            request.data._mutable = True
+            # print('request data===',request.data)
+            get_warehouse=WareHouse.objects.get(uid=request.data['warehouse_uid'])
+            get_super_user_for_testing = User.objects.get(is_superuser=True)
+            # print('get_warehouse:===',get_warehouse)
+            request.data['warehouse'] = get_warehouse.id
+            request.data['created_by'] = get_super_user_for_testing.id
+            request.data._mutable = False
+            get_product_image = request.FILES.getlist('product_image')
+            serializer = ProductSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                get_product_id = serializer.data.get('id')
+                for image in get_product_image:
+                    create_image_obj = ProductImage.objects.create(product_id=get_product_id, image=image)
+
+                return get_serializer_context("Product Created Successfully!")
+                
+            else:
+                return get_exception_context(serializer.errors)
+            
+        except Exception as exception:
+            return get_exception_context(str(exception))
+        
+
+class ProductGetApi(APIView):
+
+    def get(self,request,*args,**kwargs):
+        try:
+            get_product = Product.objects.all().select_related('warehouse','created_by')
+            serializer = ProductListSerializer(get_product,many=True)
+            return get_serializer_context(serializer.data)
+        except Exception as exception:
+            return get_exception_context(str(exception))
+
+
+        
+class ProductDeleteApi(APIView):
+
+    def delete(self,request,uid,*args,**kwargs):
+        try:
+            try:
+                get_product = Product.objects.get(uid=uid)
+                get_product.delete()
+                return get_serializer_context("Product Delete Successfully !")
+            except Exception as exception:
+                return get_exception_context('Product matching query does not exist !')
+        except Exception as exception:
+            return get_exception_context(str(exception))
+    
+class ProductUpdateApi(APIView):
+    def put(self,request,uid,*args,**kwargs):
+
+        try:
+            get_product = Product.objects.get(uid=uid)
+            serializer = ProductUpdateSerializer(get_product,request.data,partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return get_serializer_context(serializer.data)  
+            else:
+                return get_exception_context(serializer.errors)
+            
+        except Exception as exception:
+            return get_exception_context(str(exception))
+        
+class ProductDetailApi(APIView):
+    def get(self,request,uid,*args,**kwargs):
+        try:
+            try:
+                get_product = Product.objects.select_related('warehouse','created_by').get(uid=uid)
+                serializer = ProductdetailSerializer(get_product)
+                return get_serializer_context(serializer.data)
+            except Exception as exception:
+                return get_exception_context(serializer.errors)
+            
+        except Exception as exception:
+            return get_exception_context(str(exception))
+
+        
+
+
+
+
+        
+        

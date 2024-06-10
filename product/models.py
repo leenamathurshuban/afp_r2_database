@@ -1,10 +1,12 @@
 from django.db import models
 import uuid,os,shutil
-
-# Create your models here.
+from account.models import (
+    User
+)
+# # Create your models here.
 
 class BaseModel(models.Model):
-    uid = models.UUIDField(default=uuid.uuid4, editable=False, blank=True)
+    uid = models.UUIDField(default=uuid.uuid4, editable=False, blank=True,unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -13,7 +15,7 @@ class BaseModel(models.Model):
 
 
 class WareHouse(BaseModel):
-    warehouse_name = models.CharField(max_length=150,null=True,blank=True)
+    warehouse_name = models.CharField(max_length=150,null=True,blank=True,unique=True)
 
     def __str__(self):
         return self.warehouse_name
@@ -53,6 +55,8 @@ class Product(BaseModel):
     face_time_camera = models.BooleanField(default=False,null=True)
     find_my_mac = models.BooleanField(default=False,null=True)
     mdm = models.BooleanField(default=False,null=True)
+    created_by = models.ForeignKey(User, related_name="created_by_user", on_delete=models.CASCADE, blank=True, null=True) # Added on 05/06/2024
+    bar_code  = models.FileField(upload_to='bar_code/',blank=True, null=True)
 
 
     def __str__(self):

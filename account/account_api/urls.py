@@ -15,6 +15,7 @@ from account.account_api.views import (
     RoleUpdateApi,
     RoleGetApi,
     RoleDeleteApi,
+    RoleDetailView
     
 )
 
@@ -33,5 +34,6 @@ urlpatterns = [
     path('role-update-api/<str:uid>/',RoleUpdateApi.as_view(),name="role-update-api"),
     path('role-get-api/',RoleGetApi.as_view(),name="role-get-api"),
     path('role-delete-api/<str:uid>/',RoleDeleteApi.as_view(),name="role-delete-api"), 
+    path('role-detail-view/<str:uid>/',RoleDetailView.as_view(),name="role-detail-view"),
     
 ]
