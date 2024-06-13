@@ -87,14 +87,33 @@ class Product(BaseModel):
 
 
 class ProductImage(BaseModel):
+    Image_Status  = (
+        ('default','default'),
+        ('uploaded','uploaded'),
+    )
     product = models.ForeignKey(Product, related_name='product_image', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='product_image/',blank=True, null=True)
+    type = models.CharField(max_length=200,choices=Image_Status,blank=True, null=True)
 
     def __str__(self):
         return self.product.device_type
     
     class Meta:
         verbose_name_plural = 'Product Image'
+
+
+class ProductCheckOut(BaseModel):
+    product  = models.ForeignKey(Product, related_name='product_checkout', on_delete=models.CASCADE)
+    item_moved_to = models.CharField(max_length=255, blank=True, null=True)
+    first_name = models.CharField(max_length=200,blank=True,null=True)
+    last_name = models.CharField(max_length=200,blank=True,null=True)
+
+    class Meta:
+        verbose_name_plural = 'Product Checkout'
+    
+    def __str__(self):
+        return self.item_moved_to
+    
     
 
 

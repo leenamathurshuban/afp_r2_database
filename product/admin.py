@@ -2,7 +2,8 @@ from django.contrib import admin
 from product.models import (
     WareHouse,
     Product,
-    ProductImage
+    ProductImage,
+    ProductCheckOut,
 )
 
 # Register your models here.
@@ -14,6 +15,13 @@ class ProductAdmin(admin.ModelAdmin):
 class WareHouseAdmin(admin.ModelAdmin):
     list_display = ['uid','warehouse_name']
 
+class ProductImageAdmin(admin.ModelAdmin):
+    list_display = ['id','uid','product','image','type']
+
+class ProductCheckOutAdmin(admin.ModelAdmin):
+    list_display = ['id','uid','product','first_name','last_name','created_at']
+
 admin.site.register(Product, ProductAdmin)
 admin.site.register(WareHouse,WareHouseAdmin)
-admin.site.register(ProductImage)
+admin.site.register(ProductImage,ProductImageAdmin)
+admin.site.register(ProductCheckOut,ProductCheckOutAdmin)

@@ -116,6 +116,9 @@ class ProductSerializer(serializers.ModelSerializer):
            
          return attrs
 
+    
+      
+
 
 # Added below code on 05/06/2024
 class UserListSerializerForProduct(serializers.ModelSerializer):
@@ -127,7 +130,7 @@ class UserListSerializerForProduct(serializers.ModelSerializer):
 class ProductImageSerializer(serializers.ModelSerializer):
        class Meta:
              model = ProductImage
-             fields = ['id','uid','product','image']
+             fields = ['id','uid','product','image','type']
 
 
 class GetProductListSerializer(serializers.ModelSerializer):
@@ -138,6 +141,28 @@ class GetProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
+
+   
+
+    def to_representation(self,instance):
+          
+         data = super(GetProductListSerializer, self).to_representation(instance)
+         print('data:-====',data['product_image'])
+
+         if len(data['product_image']) == 0:
+                data['product_image'] = [{
+                           'id': 'test', 
+                           'uid': 'test', 
+                           'product': 'test',
+                           'image': '/media/product_image/default_product_image.jpg', 
+                           'type': 'default'
+                  }]
+                
+         
+         if data['bar_code'] is not None and '/media/media/' in data['bar_code']:
+               #  print('data:-====',data['bar_code'].split('/media/'))
+                data['bar_code'] = 'http://127.0.0.1:8000/' + data['bar_code'].split('/media/')[1]
+         return data
 # Added above code on 05/06/2024
 
 
