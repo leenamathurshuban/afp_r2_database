@@ -1,8 +1,10 @@
 from rest_framework import serializers
+from django.db.models import Q
 from product.models import (
     WareHouse,
     Product,
-    ProductImage
+    ProductImage,
+    WipingQuestionnaire
 )
 from account.models import (
     User
@@ -143,18 +145,31 @@ class ProductListSerializer(serializers.ModelSerializer):
       model = Product
       fields = '__all__'
 
+   def to_representation(self, instance):
+       data = super().to_representation(instance)
+       if data['find_my_mac'] == True:
+           data['find_my_mac'] = "Yes"
+           
+       if data['find_my_mac'] == False:
+           data['find_my_mac'] = "No"
+                
+       if data['mdm'] == True:
+           data['mdm'] = "Yes"
+
+       if data['mdm'] == False:
+           data['mdm'] = "No"
+
+       return data
+
 
 class ProductUpdateSerializer(serializers.ModelSerializer):
-   # warehouse = WareHouseSerializer()
    warehouse = serializers.CharField()
-   created_by = UserListSerializerForProduct()
-   product_image = ProductImageSerializer(many=True)
-
+   
    class Meta:
       model = Product
       fields = '__all__'
 
-   def update(self, instance, validated_data):
+   # def update(self, instance, validated_data):
 
       
       # warehouse_obj = None
@@ -163,35 +178,35 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
       #       print('warehouse_obj====',warehouse_obj)
       #       validated_data.pop('uid')
 
-      instance.serial_number =validated_data.get('serial_number',instance.serial_number)
-      instance.year = validated_data.get('year',instance.year)
-      instance.product_size = validated_data.get('product_size',instance.product_size)
-      instance.device_type = validated_data.get('device_type',instance.device_type)
-      instance.product_status = validated_data.get('product_status',instance.product_status)
-      instance.model_number = validated_data.get('model_number',instance.model_number)
-      instance.emc_number = validated_data.get('emc_number',instance.emc_number)
-      instance.model_family = validated_data.get('model_family',instance.model_family)
-      instance.memory = validated_data.get('memory',instance.memory)
-      instance.storage_type =validated_data.get('storage_type',instance.storage_type)
-      instance.storage_size = validated_data.get('storage_size',instance.storage_size)
-      instance.battery_capacity = validated_data.get('battery_capacity',instance.battery_capacity)
-      instance.battery_cycles = validated_data.get('battery_cycles',instance.battery_cycles)
-      instance.grade = validated_data.get('grade',instance.grade)
-      instance.grade_notes = validated_data.get('grade_notes',instance.grade_notes)
-      instance.technical_notes = validated_data.get('technical_notes',instance.technical_notes)
-      instance.track_pad = validated_data.get('track_pad',instance.track_pad)
-      instance.keyboard = validated_data.get('keyboard',instance.keyboard)
-      instance.lcd_ghost_peel = validated_data.get('lcd_ghost_peel',instance.lcd_ghost_peel)
-      instance.headphone_jack = validated_data.get('headphone_jack',instance.headphone_jack)
-      instance.microphone = validated_data.get('microphone',instance.microphone)
-      instance.usb_port = validated_data.get('usb_port',instance.usb_port)
-      instance.bluetooth_wifi = validated_data.get('bluetooth_wifi',instance.bluetooth_wifi)
-      instance.face_time_camera = validated_data.get('face_time_camera',instance.face_time_camera)
-      instance.find_my_mac = validated_data.get('find_my_mac',instance.find_my_mac)
-      instance.mdm = validated_data.get('mdm',instance.mdm)
-      instance.warehouse = validated_data.get('warehouse',instance.warehouse.uid)
-      print('instance.warehouse=====',instance.warehouse.uid)
-      instance.save()
+      # instance.serial_number =validated_data.get('serial_number',instance.serial_number)
+      # instance.year = validated_data.get('year',instance.year)
+      # instance.product_size = validated_data.get('product_size',instance.product_size)
+      # instance.device_type = validated_data.get('device_type',instance.device_type)
+      # instance.product_status = validated_data.get('product_status',instance.product_status)
+      # instance.model_number = validated_data.get('model_number',instance.model_number)
+      # instance.emc_number = validated_data.get('emc_number',instance.emc_number)
+      # instance.model_family = validated_data.get('model_family',instance.model_family)
+      # instance.memory = validated_data.get('memory',instance.memory)
+      # instance.storage_type =validated_data.get('storage_type',instance.storage_type)
+      # instance.storage_size = validated_data.get('storage_size',instance.storage_size)
+      # instance.battery_capacity = validated_data.get('battery_capacity',instance.battery_capacity)
+      # instance.battery_cycles = validated_data.get('battery_cycles',instance.battery_cycles)
+      # instance.grade = validated_data.get('grade',instance.grade)
+      # instance.grade_notes = validated_data.get('grade_notes',instance.grade_notes)
+      # instance.technical_notes = validated_data.get('technical_notes',instance.technical_notes)
+      # instance.track_pad = validated_data.get('track_pad',instance.track_pad)
+      # instance.keyboard = validated_data.get('keyboard',instance.keyboard)
+      # instance.lcd_ghost_peel = validated_data.get('lcd_ghost_peel',instance.lcd_ghost_peel)
+      # instance.headphone_jack = validated_data.get('headphone_jack',instance.headphone_jack)
+      # instance.microphone = validated_data.get('microphone',instance.microphone)
+      # instance.usb_port = validated_data.get('usb_port',instance.usb_port)
+      # instance.bluetooth_wifi = validated_data.get('bluetooth_wifi',instance.bluetooth_wifi)
+      # instance.face_time_camera = validated_data.get('face_time_camera',instance.face_time_camera)
+      # instance.find_my_mac = validated_data.get('find_my_mac',instance.find_my_mac)
+      # instance.mdm = validated_data.get('mdm',instance.mdm)
+      # instance.warehouse = validated_data.get('warehouse')
+      # print('instance.warehouse=====',instance.warehouse.uid)
+      # instance.save()
 
       # if 'warehouse' in validated_data:
       #    get_warehouse = self.fields['warehouse']
@@ -205,7 +220,7 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
       
       
          
-      return instance
+      # return instance
    
 
 class ProductdetailSerializer(serializers.ModelSerializer):
@@ -217,6 +232,32 @@ class ProductdetailSerializer(serializers.ModelSerializer):
          model = Product
          fields = '__all__'
 
+      def to_representation(self, instance):
+       data = super().to_representation(instance)
+       if data['find_my_mac'] == True:
+           data['find_my_mac'] = "Yes"
+           
+       if data['find_my_mac'] == False:
+           data['find_my_mac'] = "No"
+                
+       if data['mdm'] == True:
+           data['mdm'] = "Yes"
+
+       if data['mdm'] == False:
+           data['mdm'] = "No"
+
+       if len(data['product_image']) == 0:
+             data['product_image'] = [{
+                        'id': 'test', 
+                        'uid': 'test', 
+                        'product': 'test',
+                        'image': '/media/product_image/default_product_image.jpg', 
+                        'type': 'default'
+                }]
+           
+       return data
+
+
 
 class GetProductListSerializer(serializers.ModelSerializer):
     warehouse = WareHouseSerializer()
@@ -226,6 +267,98 @@ class GetProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
+
+    def to_representation(self, instance):
+       data = super().to_representation(instance)
+       if data['find_my_mac'] == True:
+           data['find_my_mac'] = "Yes"
+           
+       if data['find_my_mac'] == False:
+           data['find_my_mac'] = "No"
+                
+       if data['mdm'] == True:
+           data['mdm'] = "Yes"
+
+       if data['mdm'] == False:
+           data['mdm'] = "No"
+           
+       return data
 # Added above code on 05/06/2024
+
+class WipingQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WipingQuestionnaire
+        fields = '__all__'
+
+    def validate(self, attrs):
+        print('attrs====',attrs)
+        get_data_wiped = attrs.get('data_wiped',None)
+        get_software_used =attrs.get('software_used',None)
+        get_software_reason = attrs.get('software_reason',None)
+        get_first_name = attrs.get('first_name',None)
+        get_last_name = attrs.get('last_name',None)
+
+        if get_data_wiped is None:
+            raise serializers.ValidationError({'error':'data_wiped is required'})
+         
+        if get_data_wiped == True:
+            if get_software_used is None or get_software_used == '':
+                raise serializers.ValidationError({'error':'software_used is required'})
+            
+        if get_data_wiped == False:
+            if get_software_reason is None or get_software_reason == '':
+                raise serializers.ValidationError({'error':'software_reason is required'})
+            
+        if get_first_name is None or get_first_name == '':
+            raise serializers.ValidationError({'error':'first_name is required'})
+        
+        if get_last_name is None or get_last_name == '':
+            raise serializers.ValidationError({'error':'last_name is rquired'})
+        
+        # datawiped1 = Q(data_wiped=True)
+        # print('datawiped1====',datawiped1)
+        # datawiped2 = Q(data_wiped=False)
+        # print('datawiped2====',datawiped2)
+        get_wiped = WipingQuestionnaire.objects.filter(product=attrs['product'],data_wiped=attrs['data_wiped'])
+        print('get wiped===',get_wiped)
+        
+        if get_wiped.exists():
+            raise serializers.ValidationError({'error':'Device Data Wiping Already Submitted'})
+       
+        return attrs
+            
+
+class WipingQuestionUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WipingQuestionnaire
+        fields = '__all__'
+
+    def validate(self, attrs):
+        get_data_wiped = attrs.get('data_wiped',None)
+        get_software_used =attrs.get('software_used',None)
+        get_software_reason = attrs.get('software_reason',None)
+
+        if get_data_wiped == True:
+            if get_software_used is None or get_software_used == '':
+                raise serializers.ValidationError({'error':'software_used is required'})
+            
+        if get_data_wiped == False:
+            if get_software_reason is None or get_software_reason == '':
+                raise serializers.ValidationError({'error':'software_reason is required'})
+        return attrs
+
+class ProductSerializerForWiping(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id','uid','serial_number','year','product_size','device_type','product_status']
+
+class WipingQuestionGetSerializer(serializers.ModelSerializer):
+    product = ProductSerializerForWiping()
+    class Meta:
+        model = WipingQuestionnaire
+        fields = '__all__'
+            
+
+
 
 

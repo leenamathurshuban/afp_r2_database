@@ -86,8 +86,13 @@ class Product(BaseModel):
 
 
 class ProductImage(BaseModel):
+    Image_Status = (
+        ('default','default'),
+        ('uploded','uploded'),
+    )
     product = models.ForeignKey(Product, related_name='product_image', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='product_image/',blank=True, null=True)
+    type = models.CharField(max_length=200,choices=Image_Status,blank=True,null=True)
 
     def __str__(self):
         return self.product.device_type
@@ -96,5 +101,19 @@ class ProductImage(BaseModel):
         verbose_name_plural = 'Product Image'
     
 
+class WipingQuestionnaire(BaseModel):
+    product = models.ForeignKey(Product,related_name='wiping_product',on_delete=models.CASCADE)
+    first_name = models.CharField(max_length=200,blank=True,null=True)
+    last_name = models.CharField(max_length=200,blank=True,null=True)
+    data_wiped = models.BooleanField(default=False,null=True,blank=True)
+    software_used = models.TextField(blank=True,null=True)
+    software_reason = models.TextField(blank=True,null=True)
 
+    def __str__(self):
+        return self.first_name
+    
+    class Meta:
+        verbose_name_plural = 'Wiping Questionnair'
+
+    
 
