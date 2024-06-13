@@ -115,5 +115,18 @@ class WipingQuestionnaire(BaseModel):
     class Meta:
         verbose_name_plural = 'Wiping Questionnair'
 
+
+class ProductCheckOut(BaseModel):
+    product  = models.ForeignKey(Product, related_name='product_checkout', on_delete=models.CASCADE)
+    item_moved_to = models.CharField(max_length=255, blank=True, null=True)
+    first_name = models.CharField(max_length=200,blank=True,null=True)
+    last_name = models.CharField(max_length=200,blank=True,null=True)
+
+    class Meta:
+        verbose_name_plural = 'Product Checkout'
+    
+    def __str__(self):
+        return self.item_moved_to
+
     
 

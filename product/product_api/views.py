@@ -135,8 +135,11 @@ class ProductPostApi(APIView):
                 serializer.save()
 
                 get_product_id = serializer.data.get('id')
-                for image in get_product_image:
-                    create_image_obj = ProductImage.objects.create(product_id=get_product_id, image=image)
+                if get_product_image:
+                    for image in get_product_image:
+                        create_image_obj = ProductImage.objects.create(product_id=get_product_id, image=image, type='uploaded')
+                # else:
+                #     create_image_obj = ProductImage.objects.create(product_id=get_product_id, image='product_image/default_product_image.jpg', type='default')
 
                 return get_serializer_context("Product Created Successfully!")
             else:
@@ -157,20 +160,25 @@ class GetProductListAPI(APIView):
         except Exception as exception:
             return get_exception_context(str(exception))
 
-
+from barcode.writer import ImageWriter
 class generate_barcode(APIView):
     
     def get(self, request, *args, **kwargs):
         # Make sure to pass the number as string 
-        number = "AFP0002"
-        ary = {}
+        number ="AFP0002-af9b425c"
+
         # barcode_writer = ImageWriter()
+        from django.conf import settings
+        import os
 
-        ean = barcode.codex.Code39(number, add_checksum=False)
+        ean = barcode.codex.Code128(number, writer=ImageWriter())
 
-        unique_filename = uuid.uuid4()
+        # unique_filename = uuid.uuid4()
 
-        filename = ean.save(unique_filename)
+        get_product_obj = Product.objects.get(uid='af9b425c-f730-41cd-a352-b009cedde80c')
+
+        get_product_obj.bar_code = ean.save('media/bar_code/ayan17')
+        get_product_obj.save()
         
         # Now, let's create an object of EAN13 
         # class and pass the number 
@@ -179,7 +187,7 @@ class generate_barcode(APIView):
         # Our barcode is ready. Let's save it. 
         # file = my_code.save("new")
 
-        return Response(filename)
+        return Response('filename')
 
 
 class ProductPostApi(APIView):

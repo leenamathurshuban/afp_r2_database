@@ -123,6 +123,9 @@ class ProductSerializer(serializers.ModelSerializer):
            
          return attrs
 
+    
+      
+
 
 # Added below code on 05/06/2024
 class UserListSerializerForProduct(serializers.ModelSerializer):
@@ -270,6 +273,7 @@ class GetProductListSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
        data = super().to_representation(instance)
+
        if data['find_my_mac'] == True:
            data['find_my_mac'] = "Yes"
            
@@ -281,6 +285,15 @@ class GetProductListSerializer(serializers.ModelSerializer):
 
        if data['mdm'] == False:
            data['mdm'] = "No"
+        
+       if len(data['product_image']) == 0:
+                data['product_image'] = [{
+                    'id': 'test', 
+                    'uid': 'test', 
+                    'product': 'test',
+                    'image': '/media/product_image/default_product_image.jpg', 
+                    'type': 'default'
+                  }]
            
        return data
 # Added above code on 05/06/2024

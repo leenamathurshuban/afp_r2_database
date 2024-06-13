@@ -3,7 +3,8 @@ from product.models import (
     WareHouse,
     Product,
     ProductImage,
-    WipingQuestionnaire
+    WipingQuestionnaire,
+    ProductCheckOut,
 )
 
 # Register your models here.
@@ -16,13 +17,18 @@ class WareHouseAdmin(admin.ModelAdmin):
     list_display = ['uid','warehouse_name']
 
 class ProductImageAdmin(admin.ModelAdmin):
-    list_display = ['id','uid','image','type']
+    list_display = ['id','uid','product','image','type']
 
 class WipingQuestionnaireAdmin(admin.ModelAdmin):
     list_display = ['id','uid','product','first_name','last_name','data_wiped','software_used','software_reason']
 
+class ProductCheckOutAdmin(admin.ModelAdmin):
+    list_display = ['id','uid','product','first_name','last_name','created_at']
 
-admin.site.register(WipingQuestionnaire,WipingQuestionnaireAdmin)
+
+
 admin.site.register(Product, ProductAdmin)
 admin.site.register(WareHouse,WareHouseAdmin)
 admin.site.register(ProductImage,ProductImageAdmin)
+admin.site.register(WipingQuestionnaire,WipingQuestionnaireAdmin)
+admin.site.register(ProductCheckOut,ProductCheckOutAdmin)
