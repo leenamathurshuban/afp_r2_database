@@ -10,6 +10,8 @@ from product.models import (
     WareHouse,
     Product,
     ProductImage,
+    WipingQuestionnaire,
+    ProductCheckOut,
 )
 from account.models import (
     User
@@ -17,9 +19,25 @@ from account.models import (
 from product.product_api.serializers import (
     WareHouseSerializer,
     UpdateWareHouseSerializer,
+
     ProductSerializer,
+    ProductListSerializer,
+    ProductUpdateSerializer,
+    ProductdetailSerializer,
     GetProductListSerializer,
+
+    WipingQuestionSerializer,
+    WipingQuestionUpdateSerializer,
+    WipingQuestionGetSerializer,
+
+    ProductCheckOutSerializer,
+    ProductCheckOutUpdateSerializer,
+    ProductCheckoutGetSerializer,
 )
+from account.models import (
+    User
+)
+
 import uuid
 import barcode
 from barcode.writer import ImageWriter
@@ -192,40 +210,233 @@ class generate_barcode(APIView):
         return Response('filename')
 
 
-# import requests,json
+class ProductDeleteApi(APIView):
 
-# class zebra_barcode_generate(APIView):
+    def delete(self,request,uid,*args,**kwargs):
+        try:
+            try:
+                get_product = Product.objects.get(uid=uid)
+                get_product.delete()
+                return get_serializer_context("Product Delete Successfully!")
+            except Exception as exception:
+                return get_exception_context('Product does not exist!')
+        except Exception as exception:
+            return get_exception_context(str(exception))
     
-#     def get(self, request, *args, **kwargs):
+class ProductUpdateApi(APIView):
+    def put(self,request,uid,*args,**kwargs):
 
-#         zebra_url = 'https://api.zebra.com/v2/tools/barcode/generate/?symbology=code128&text=AFP000000001&includeText=AFP000000001'
+        try:
+            get_product = Product.objects.get(uid=uid)
+            get_data = request.data.get('warehouse_uid',None)
+            if get_data:
+                request.data._mutable = True
+                get_warehouse=WareHouse.objects.get(uid=request.data['warehouse_uid'])   
+                request.data['warehouse'] = get_warehouse.id
+                request.data._mutable = False
+            get_product_image = request.FILES.getlist('product_image')
+            serializer = ProductUpdateSerializer(get_product,request.data,partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                get_product_id = serializer.data.get('id')
 
-#         headers = {
-#             'accept': '*/*',
-#             'apikey': '2WZAdM1vJqwtpV88ALklcJOGijIoS5Uf'
-#         }
-#         payload = {}
+                if get_product_image:
+                    for image in get_product_image:
+                        create_image_obj = ProductImage.objects.create(product_id=get_product_id, image=image,type='uploded')
+                        get_obj = ProductImage.objects.get(product=get_product_id,type='default')
+                        print('get_obj====',get_obj)
+                        get_obj.delete()
+ 
+                return get_serializer_context("Product Updated Succesfully!")
+            else:
+                return get_exception_context(serializer.errors)
+            
+        except Exception as exception:
+            return get_exception_context(str(exception))
+        
+class ProductDetailApi(APIView):
+    def get(self,request,uid,*args,**kwargs):
+        try:
+            get_product = Product.objects.select_related('warehouse','created_by').prefetch_related('wiping_product','product_checkout','product_image').get(uid=uid)
+            serializer = ProductdetailSerializer(get_product)
+            return get_serializer_context(serializer.data) 
+        except Exception as exception:
+            return get_exception_context(str(exception))
 
-#         zebra_request = requests.get(zebra_url,headers=headers)
-#         byte = zebra_request.content
-#         from django.conf import settings
-#         print('media :-===',settings.MEDIA_ROOT + "bar_code/")
-#         media = settings.MEDIA_ROOT + "bar_code/"
+        
+class ProductImageDeleteApi(APIView):
+    def delete(self,request,uid,*args,**kwargs):
+        try:
+            try:
+                get_obj = ProductImage.objects.get(uid=uid)
+                get_obj.delete()
+                return get_serializer_context("Product Image Deleted!")
+            except Exception as exception:
+                return get_exception_context("Image Not Found")
+        except Exception as exception:
+            return get_exception_context(str(exception))
 
-#         with open(media, "wb") as f:
-#             f.write(byte)
-#         # byte = byte.decode().replace("'", '"')
-#         # ans = json.loads(byte)
-#         # json_data = json.loads(str(zebra_request.content, 'utf-8'))
+# Worked on below code 13/06/2024 By Tasmiya
 
-#         # print('zebra Url :-==', byte)
+class WipingQuestionsPostApi(APIView):
+    def post(self,request,*args,**kwargs):
+        try:
+            get_product = request.data.get('product_uid',None)
+            # print('get_product====',get_product)
+            if get_product is None or get_product == '':
+                return get_exception_context({'product_uid':['product_uid is required']})
+            request.data._mutable = True
+            get_product = Product.objects.get(uid=request.data['product_uid'])
+            request.data['product'] = get_product.id
+            request.data._mutable = False
+            serializer = WipingQuestionSerializer(data=request.data)
+            if serializer.is_valid():
+                get_product.product_status = 'CHECKED-IN'
+                get_product.save()
+                serializer.save()
+                return get_serializer_context(serializer.data)
+            else:
+                return get_exception_context(serializer.errors)
+            
+        except Exception as exception:
+            return get_exception_context(str(exception))
         
 
-#         # get_product_obj = Product.objects.get(uid='af9b425c-f730-41cd-a352-b009cedde80c')
-
-#         # get_product_obj.bar_code = ean.save('media/bar_code/ayan17')
-#         # get_product_obj.save()
+class WipingQuestionsUpdateApi(APIView):
+    def put(self,request,uid,*args,**kwargs):
+        try:
+            get_wiped = WipingQuestionnaire.objects.get(uid=uid)
+            get_product = request.data.get('product_uid',None)
+            if get_product:
+                request.data._mutable = True
+                get_product_obj = Product.objects.get(uid=request.data['product_uid'])
+                request.data['product'] = get_product_obj.id
+                request.data._mutable = False
+            serializer = WipingQuestionUpdateSerializer(get_wiped,data=request.data,partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return get_serializer_context(serializer.data)
+            else:
+                return get_exception_context(serializer.errors)
+        except Exception as exception:
+            return get_exception_context(str(exception))
+            
+            
+class WipingQuestionsGetApi(APIView):
+    def get(self,request,uid,*args,**kwargs):
+        try:
+            try:
+                get_wiped = WipingQuestionnaire.objects.select_related('product').get(uid=uid)
+                serializer = WipingQuestionGetSerializer(get_wiped)
+                return get_serializer_context(serializer.data)
+            except Exception as exception:
+                return get_exception_context('Device Data Wiping Does Not Exist')      
+        except Exception as exception:
+            return get_exception_context(str(exception))
         
+class WipingQuestionsDeleteApi(APIView):
+    def delete(self,request,uid,*args,**kwargs):
+        try:
+            try:
+                get_wiped = WipingQuestionnaire.objects.get(uid=uid)
+                get_wiped.delete()
+                return get_serializer_context('Device Data Wiping Deleted Successfully')
+            except Exception as exception:
+                return get_exception_context('Device Data Wiping Does Not Exist')
+        except Exception as exception:
+            return get_exception_context(str(exception))
         
+class WipingQuestionListApi(APIView):
+    def get(self,request,*args,**kwargs):
+        try:
+            try:           
+                get_wiped = WipingQuestionnaire.objects.filter(product__product_status='CHECKED-IN').select_related('product').order_by('-id')
+                serializer = WipingQuestionGetSerializer(get_wiped,many=True)
+                return get_serializer_context(serializer.data)
+            except Exception as exception:
+                return get_exception_context(serializer.errors)        
+        except Exception as exception:
+            return get_exception_context(str(exception))
+        
+# Worked on above code 27/05/2024 By Tasmiya
 
-#         return Response('filename')
+
+# Worked on below code 14/06/2024 By Tasmiya
+
+class ProductCheckOutPostApi(APIView):
+    def post(self,request,*args,**kwargs):
+        try:
+            get_product = request.data.get('product_uid',None)
+            if get_product is None or get_product == '':
+                return get_exception_context({'product_uid':['product_uid is required']})
+            request.data._mutable = True
+            get_obj = Product.objects.get(uid=request.data['product_uid'])
+            request.data['product'] = get_obj.id
+            request.data._mutable = False
+            serializer = ProductCheckOutSerializer(data=request.data)
+            if serializer.is_valid():
+                get_obj.product_status = 'CHECKED-OUT'
+                get_obj.save()
+                serializer.save()        
+                return get_serializer_context(serializer.data)
+            else:
+                return get_exception_context(serializer.errors)
+        except Exception as exception:
+            return get_exception_context(str(exception))
+            
+
+class ProductCheckOutUpdateApi(APIView):
+    def put(self,request,uid,*args,**kwargs):
+        try:
+            get_product_checkout = ProductCheckOut.objects.get(uid=uid)
+            get_product = request.data.get('product_uid',None)
+            if get_product:
+                request.data._mutable = True
+                get_product_obj  = Product.objects.get(uid=request.data['product_uid'])
+                request.data['product'] = get_product_obj.id
+                request.data._mutable = False
+            serializer = ProductCheckOutUpdateSerializer(get_product_checkout,data=request.data,partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return get_serializer_context(serializer.data)
+            else:
+                return get_exception_context(serializer.errors)
+            
+        except Exception as exception:
+            return get_exception_context(str(exception))
+        
+class ProductCheckOutGetApi(APIView):
+    def get(self,request,uid,*args,**kwargs):
+        try:
+            get_product_checkout = ProductCheckOut.objects.select_related('product').get(uid=uid)
+            serializer = ProductCheckoutGetSerializer(get_product_checkout)
+            return get_serializer_context(serializer.data)
+        except Exception as exception:
+            return get_exception_context(str(exception))
+            
+
+class ProductCheckOutListApi(APIView):
+    def get(self,request,*args,**kwargs):
+        try:
+            get_obj = ProductCheckOut.objects.filter(product__product_status='CHECKED-OUT').select_related('product').order_by('-id')
+            serializer = ProductCheckoutGetSerializer(get_obj,many=True)
+            return get_serializer_context(serializer.data)
+        except Exception as exception:
+            return get_exception_context(str(exception))
+        
+class ProductCheckOutDeleteApi(APIView):
+    def delete(self,request,uid,*args,**kwargs):
+        try:
+            try:
+                get_obj = ProductCheckOut.objects.get(uid=uid)
+                get_obj.delete()
+                return get_serializer_context('Product CheckOut Deleted Successfully!')
+            except Exception as exception:
+                return get_exception_context('Product CheckOut does not exist!')
+        except Exception as exception:
+            return get_exception_context(str(exception))
+        
+# Worked on above code 14/06/2024 By Tasmiya
+
+
+

@@ -5,7 +5,8 @@ from rest_framework.generics import ListAPIView
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password
 from rest_framework.permissions import (
-    AllowAny
+    AllowAny,
+    IsAuthenticated
 )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -124,27 +125,18 @@ class UserListView(ListAPIView):
 # Worked on below code 26/05/2024 By Tasmiya
 
 class RolePostApi(APIView):
+    
     def post(self,request,*args,**kwargs):
         try:
             serializer =RoleSerializer(data=request.data)  
-            if not serializer.is_valid():
-                # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
+            if  serializer.is_valid():
+                serializer.save()
+                return get_serializer_context(serializer.data)      
+            else:
                 return get_exception_context(serializer.errors)
-                
-            serializer.save()
-            context = {
-                'status':status.HTTP_200_OK,
-                'success':True,
-                'response':serializer.data
-            }
-            return Response(context,status=status.HTTP_200_OK)
+
         except Exception as exception:
-           context = {
-                    'status':status.HTTP_400_BAD_REQUEST,
-                    'success':False,
-                    'response':str(exception)
-            }
-           return Response(context,status=status.HTTP_400_BAD_REQUEST)
+           return get_exception_context(str(exception))
 # Worked on above code 27/05/2024 By Tasmiya
 
         
@@ -153,51 +145,30 @@ class RoleUpdateApi(APIView):
     def put(self, request,*args,**kwargs):
         
         uuid = kwargs.get('uid', None)
-        print("uuid===",uuid)
-        if uuid:       
-            try:
-                get_role = Role.objects.get(role_uid=uuid)
-                serializer = RoleSerializer(get_role,data=request.data,partial=True)
-                if not serializer.is_valid():
-                    # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
-                    return get_exception_context(serializer.errors)
-
+        print("uuid===",uuid)     
+        try:
+            get_role = Role.objects.get(role_uid=uuid)
+            serializer = RoleUpdateSerializer(get_role,data=request.data,partial=True)
+            if  serializer.is_valid():
                 serializer.save()
-                context = {
-                    'status':status.HTTP_200_OK,
-                    'success':True,
-                    'response':serializer.data
-                }
-                return Response(context,status=status.HTTP_200_OK)
-            except Exception as exception:
-                context = {
-                    'status':status.HTTP_400_BAD_REQUEST,
-                    'success':False,
-                    'response': str(exception)
-                }
-                return Response(context,status=status.HTTP_400_BAD_REQUEST)
+                # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
+                return get_serializer_context(serializer.data)
+            else:
+                return get_exception_context(serializer.errors)
+        except Exception as exception:
+            return get_exception_context(str(exception))
 # Worked on above code 27/05/2024 By Tasmiya
             
 # Worked on below code 27/05/2024 By Tasmiya  
 class RoleGetApi(APIView):
-
+    
     def get(self,request):
         try:
             get_role = Role.objects.all().order_by('-id')
             serializer = RoleSerializer(get_role,many=True)
-            context = {
-                'status':status.HTTP_200_OK,
-                'success':True,
-                'response':serializer.data
-            }
-            return Response(context,status=status.HTTP_200_OK)         
+            return get_serializer_context(serializer.data)      
         except Exception as exception:
-            context = {
-                'status':status.HTTP_400_BAD_REQUEST,
-                'success':False,
-                'response':str(exception)
-            }
-            return Response(context,status=status.HTTP_400_BAD_REQUEST)
+            return get_exception_context(str(exception))
 # Worked on above code 27/05/2024 By Tasmiya
 
 # Worked on below code 27/05/2024 By Tasmiya  
@@ -206,24 +177,15 @@ class RoleDeleteApi(APIView):
     def delete(self,request,*args,**kwargs):
         uuid = kwargs.get('uid', None)
         try:
-            get_role = Role.objects.get(role_uid=uuid)
-            get_role.delete()
-            context = {
-                'status':status.HTTP_200_OK,
-                'success':True,
-                'response':"Role Deleted Successfully!"
-            }
-            return Response(context,status=status.HTTP_200_OK)
-             
+            try:
+                get_role = Role.objects.get(role_uid=uuid)
+                get_role.delete()
+                return get_serializer_context("Role Deleted Successfully !")
+            except Exception as exception:
+                return get_exception_context("Role matching query does not exist !") 
         except Exception as exception:
-            context = {
-                'status':status.HTTP_400_BAD_REQUEST,
-                'success':True,
-                'response':str(exception)
-            }
-            return Response(context,status=status.HTTP_400_BAD_REQUEST)
+            return get_exception_context(str(exception))
 # Worked on above code 27/05/2024 By Tasmiya
-
 
 # Added below code on 06/06/2024
 class RoleDetailView(APIView):
@@ -243,13 +205,9 @@ class UserdetailApi(APIView):
     def get(self,request,**kwargs):
         uuid = kwargs.get('uid', None)
         try:
-            try:
-                get_object = User.objects.select_related('user_role').get(user_uid=uuid)
-                serializer = UserDetailSerializer(get_object)
-                return get_serializer_context(serializer.data)
-            except Exception as exception:
-                # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
-                return get_exception_context(serializer.errors)
+            get_object = User.objects.select_related('user_role').get(user_uid=uuid)
+            serializer = UserDetailSerializer(get_object)
+            return get_serializer_context(serializer.data)
         except Exception as exception:
              return get_exception_context(str(exception))
         
