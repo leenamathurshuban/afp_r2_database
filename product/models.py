@@ -59,7 +59,8 @@ class Product(BaseModel):
     mdm = models.BooleanField(default=False,null=True)
     created_by = models.ForeignKey(User, related_name="created_by_user", on_delete=models.CASCADE, blank=True, null=True) # Added on 05/06/2024
 
-    bar_code  = models.FileField(upload_to='bar_code/',blank=True, null=True)
+    bar_code  = models.FileField(upload_to='bar_code/',blank=True, null=True) # Added on 05/06/2024
+    bar_code_number  = models.CharField(max_length=255,editable=False,blank=True, null=True) # Added on 21/06/2024
 
 
     def __str__(self):

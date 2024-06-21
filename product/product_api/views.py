@@ -121,6 +121,22 @@ class ProductPostApi(APIView):
                 serializer.save()
 
                 get_product_id = serializer.data.get('id')
+
+                # Added below code on 20/06/2024
+                serial_number = serializer.data.get('serial_number')
+                get_barcode_name = f'AFP{serial_number}{get_product_id}'
+                from barcode.writer import ImageWriter
+                import uuid
+
+                ean = barcode.codex.Code128(get_barcode_name, writer=ImageWriter())
+                unique_filename = uuid.uuid4()
+
+                get_product_obj = Product.objects.get(id=get_product_id)
+                get_product_obj.bar_code = ean.save(f'media/bar_code/{unique_filename}')
+                get_product_obj.bar_code_number = get_barcode_name
+                get_product_obj.save()
+                # Added above code on 20/06/2024
+
                 if get_product_image:
                     for image in get_product_image:
                         create_image_obj = ProductImage.objects.create(product_id=get_product_id, image=image, type='uploaded')
@@ -139,7 +155,7 @@ class GetProductListAPI(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            get_product_qs = Product.objects.all().select_related('warehouse','created_by').prefetch_related('product_image')
+            get_product_qs = Product.objects.all().select_related('warehouse','created_by').prefetch_related('product_image').order_by('-id')
             serializer = GetProductListSerializer(get_product_qs, many=True)
             return get_serializer_context(serializer.data)
             
@@ -174,3 +190,42 @@ class generate_barcode(APIView):
         # file = my_code.save("new")
 
         return Response('filename')
+
+
+# import requests,json
+
+# class zebra_barcode_generate(APIView):
+    
+#     def get(self, request, *args, **kwargs):
+
+#         zebra_url = 'https://api.zebra.com/v2/tools/barcode/generate/?symbology=code128&text=AFP000000001&includeText=AFP000000001'
+
+#         headers = {
+#             'accept': '*/*',
+#             'apikey': '2WZAdM1vJqwtpV88ALklcJOGijIoS5Uf'
+#         }
+#         payload = {}
+
+#         zebra_request = requests.get(zebra_url,headers=headers)
+#         byte = zebra_request.content
+#         from django.conf import settings
+#         print('media :-===',settings.MEDIA_ROOT + "bar_code/")
+#         media = settings.MEDIA_ROOT + "bar_code/"
+
+#         with open(media, "wb") as f:
+#             f.write(byte)
+#         # byte = byte.decode().replace("'", '"')
+#         # ans = json.loads(byte)
+#         # json_data = json.loads(str(zebra_request.content, 'utf-8'))
+
+#         # print('zebra Url :-==', byte)
+        
+
+#         # get_product_obj = Product.objects.get(uid='af9b425c-f730-41cd-a352-b009cedde80c')
+
+#         # get_product_obj.bar_code = ean.save('media/bar_code/ayan17')
+#         # get_product_obj.save()
+        
+        
+
+#         return Response('filename')

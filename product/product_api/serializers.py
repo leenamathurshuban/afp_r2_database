@@ -161,7 +161,7 @@ class GetProductListSerializer(serializers.ModelSerializer):
          
          if data['bar_code'] is not None and '/media/media/' in data['bar_code']:
                #  print('data:-====',data['bar_code'].split('/media/'))
-                data['bar_code'] = 'http://127.0.0.1:8000/' + data['bar_code'].split('/media/')[1]
+                data['bar_code'] = '/'+ data['bar_code'].split('/media/')[1]
          return data
 # Added above code on 05/06/2024
 

@@ -9,7 +9,7 @@ from product.models import (
 # Register your models here.
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['uid','serial_number','device_type','warehouse','model_number','model_family','storage_type']
+    list_display = ['uid','serial_number','device_type','warehouse','model_number','model_family','storage_type','bar_code_number']
 
 
 class WareHouseAdmin(admin.ModelAdmin):
