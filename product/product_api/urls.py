@@ -22,6 +22,12 @@ from product.product_api.views import (
     WipingQuestionsDeleteApi,
     WipingQuestionListApi,
 
+    ProductCheckOutPostApi,
+    ProductCheckOutUpdateApi,
+    ProductCheckOutGetApi,
+    ProductCheckOutListApi,
+    ProductCheckOutDeleteApi,
+
     generate_barcode, # For testing Purpose
 
 )
@@ -47,6 +53,13 @@ path('wiping-questions-update-api/<str:uid>/',WipingQuestionsUpdateApi.as_view()
 path('wiping-questions-get-api/<str:uid>/',WipingQuestionsGetApi.as_view(),name='wiping-questions-get-api'),
 path('wiping-questions-delete-api/<str:uid>/',WipingQuestionsDeleteApi.as_view(),name='wiping-questions-delete-api'),
 path('wiping-questions-list-api/',WipingQuestionListApi.as_view(),name='wiping-questions-list-api'),
+
+path('proudct-checkout-post-api/',ProductCheckOutPostApi.as_view(),name='proudct-checkout-post-api'),
+path('product-checkout-update-api/<str:uid>/',ProductCheckOutUpdateApi.as_view(),name='product-checkout-update-api'),
+path('product-checkout-get-api/<str:uid>/',ProductCheckOutGetApi.as_view(),name='product-checkout-get-api'),
+path('product-checkout-list-api/',ProductCheckOutListApi.as_view(),name='product-check-list-api'),
+path('product-checkout-delete-api/<str:uid>/',ProductCheckOutDeleteApi.as_view(),name='product-checkout-delete-api'),
+
 
 path('bar-code/',generate_barcode.as_view()), # For testing Purpose
 

@@ -5,7 +5,8 @@ from rest_framework.generics import ListAPIView
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password
 from rest_framework.permissions import (
-    AllowAny
+    AllowAny,
+    IsAuthenticated
 )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -124,6 +125,7 @@ class UserListView(ListAPIView):
 # Worked on below code 26/05/2024 By Tasmiya
 
 class RolePostApi(APIView):
+    
     def post(self,request,*args,**kwargs):
         try:
             serializer =RoleSerializer(data=request.data)  
@@ -159,7 +161,7 @@ class RoleUpdateApi(APIView):
             
 # Worked on below code 27/05/2024 By Tasmiya  
 class RoleGetApi(APIView):
-
+    
     def get(self,request):
         try:
             get_role = Role.objects.all().order_by('-id')
@@ -203,13 +205,9 @@ class UserdetailApi(APIView):
     def get(self,request,**kwargs):
         uuid = kwargs.get('uid', None)
         try:
-            try:
-                get_object = User.objects.select_related('user_role').get(user_uid=uuid)
-                serializer = UserDetailSerializer(get_object)
-                return get_serializer_context(serializer.data)
-            except Exception as exception:
-                # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
-                return get_exception_context(serializer.errors)
+            get_object = User.objects.select_related('user_role').get(user_uid=uuid)
+            serializer = UserDetailSerializer(get_object)
+            return get_serializer_context(serializer.data)
         except Exception as exception:
              return get_exception_context(str(exception))
         

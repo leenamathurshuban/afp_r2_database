@@ -4,7 +4,8 @@ from product.models import (
     WareHouse,
     Product,
     ProductImage,
-    WipingQuestionnaire
+    WipingQuestionnaire,
+    ProductCheckOut
 )
 from account.models import (
     User
@@ -59,6 +60,7 @@ class ProductSerializer(serializers.ModelSerializer):
          get_grade = attrs.get('grade',None)
          get_grade_notes = attrs.get('grade_notes',None)
          get_technical_notes = attrs.get('technical_notes',None)
+         
 
          
          if get_serial_number is None or get_serial_number == '':
@@ -120,8 +122,9 @@ class ProductSerializer(serializers.ModelSerializer):
 
          if get_product_instance.exists():
                raise serializers.ValidationError({'error':'Product already Checked-in!'})
-           
+         
          return attrs
+
 
     
       
@@ -210,23 +213,21 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
       # instance.warehouse = validated_data.get('warehouse')
       # print('instance.warehouse=====',instance.warehouse.uid)
       # instance.save()
-
-      # if 'warehouse' in validated_data:
-      #    get_warehouse = self.fields['warehouse']
-      #    print('get_warehouse====',get_warehouse)
-      #    instance = instance.warehouse.uid
-      #    data =validated_data.pop('warehouse')
-      #    get_warehouse.update(instance,data)
-      # warehouse_uid  = validated_data.pop('warehouse') 
-      # print('warehouse_uid====',warehouse_uid)
-      # instance.warehouse_name = validated_data.get('warehouse_name',None)
       
-      
-         
       # return instance
-   
+class WipingQuestionSerializerForProductDetail(serializers.ModelSerializer):
+    class Meta:
+        model = WipingQuestionnaire
+        fields = '__all__'
+
+class ProductCheckOutSerializerForProductDetail(serializers.ModelSerializer):
+    class Meta:
+        model = ProductCheckOut
+        fields = '__all__'
 
 class ProductdetailSerializer(serializers.ModelSerializer):
+      wiping_product = WipingQuestionSerializerForProductDetail(many=True)
+      product_checkout  = ProductCheckOutSerializerForProductDetail(many=True)
       warehouse = WareHouseSerializer()
       created_by = UserListSerializerForProduct()
       product_image = ProductImageSerializer(many=True)
@@ -285,6 +286,12 @@ class GetProductListSerializer(serializers.ModelSerializer):
 
        if data['mdm'] == False:
            data['mdm'] = "No"
+
+       if data['apple_care'] == True:
+           data['apple_care'] = "Yes"
+
+       if data['apple_care'] == False:
+           data['apple_care'] = "No"
         
        if len(data['product_image']) == 0:
                 data['product_image'] = [{
@@ -304,7 +311,7 @@ class WipingQuestionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate(self, attrs):
-        print('attrs====',attrs)
+        # print('attrs====',attrs)
         get_data_wiped = attrs.get('data_wiped',None)
         get_software_used =attrs.get('software_used',None)
         get_software_reason = attrs.get('software_reason',None)
@@ -312,21 +319,21 @@ class WipingQuestionSerializer(serializers.ModelSerializer):
         get_last_name = attrs.get('last_name',None)
 
         if get_data_wiped is None:
-            raise serializers.ValidationError({'error':'data_wiped is required'})
+            raise serializers.ValidationError({'data_wiped':'data_wiped is required'})
          
         if get_data_wiped == True:
             if get_software_used is None or get_software_used == '':
-                raise serializers.ValidationError({'error':'software_used is required'})
+                raise serializers.ValidationError({'software_used':'software_used is required'})
             
         if get_data_wiped == False:
             if get_software_reason is None or get_software_reason == '':
-                raise serializers.ValidationError({'error':'software_reason is required'})
+                raise serializers.ValidationError({'software_reason':'software_reason is required'})
             
         if get_first_name is None or get_first_name == '':
-            raise serializers.ValidationError({'error':'first_name is required'})
+            raise serializers.ValidationError({'first_name':'first_name is required'})
         
         if get_last_name is None or get_last_name == '':
-            raise serializers.ValidationError({'error':'last_name is rquired'})
+            raise serializers.ValidationError({'last_name':'last_name is rquired'})
         
         # datawiped1 = Q(data_wiped=True)
         # print('datawiped1====',datawiped1)
@@ -353,11 +360,11 @@ class WipingQuestionUpdateSerializer(serializers.ModelSerializer):
 
         if get_data_wiped == True:
             if get_software_used is None or get_software_used == '':
-                raise serializers.ValidationError({'error':'software_used is required'})
+                raise serializers.ValidationError({'software_used':'software_used is required'})
             
         if get_data_wiped == False:
             if get_software_reason is None or get_software_reason == '':
-                raise serializers.ValidationError({'error':'software_reason is required'})
+                raise serializers.ValidationError({'software_reason':'software_reason is required'})
         return attrs
 
 class ProductSerializerForWiping(serializers.ModelSerializer):
@@ -370,8 +377,51 @@ class WipingQuestionGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = WipingQuestionnaire
         fields = '__all__'
-            
 
 
+  # Worked on below code 14/06/2024 By Tasmiya
 
+class ProductCheckOutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductCheckOut
+        fields = '__all__'
+
+
+    def validate(self, attrs):
+        # print('attrs====',attrs)
+        get_item_moved_to = attrs.get('item_moved_to',None)
+        get_first_name = attrs.get('first_name',None)
+        get_last_name = attrs.get('last_name',None)
+
+        if get_item_moved_to is None or get_item_moved_to == '':
+            raise serializers.ValidationError({'item_moved_to':'item_moved_to is required!'})
+        
+        if get_first_name is None or get_first_name == '':
+            raise serializers.ValidationError({'first_name':'first_name is required!'})
+        
+        if get_last_name is None or get_last_name == '':
+            raise serializers.ValidationError({'last_name':'last_name is required!'})
+        
+
+        get_product = ProductCheckOut.objects.filter(product=attrs['product'],
+                                                     product__product_status='CHECKED-OUT'
+                                                     )
+        if get_product:
+            raise serializers.ValidationError({'error':'Product Already Checked Out!'})
+         
+        return attrs
+
+class ProductCheckOutUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductCheckOut
+        fields = '__all__'
+
+
+class ProductCheckoutGetSerializer(serializers.ModelSerializer):
+    product = ProductSerializerForWiping()
+    class Meta:
+        model = ProductCheckOut
+        fields = '__all__'
+
+# Worked on above code 14/06/2024 By Tasmiya
 

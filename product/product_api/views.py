@@ -11,6 +11,7 @@ from product.models import (
     Product,
     ProductImage,
     WipingQuestionnaire,
+    ProductCheckOut,
 )
 from account.models import (
     User
@@ -28,6 +29,10 @@ from product.product_api.serializers import (
     WipingQuestionSerializer,
     WipingQuestionUpdateSerializer,
     WipingQuestionGetSerializer,
+
+    ProductCheckOutSerializer,
+    ProductCheckOutUpdateSerializer,
+    ProductCheckoutGetSerializer,
 )
 from account.models import (
 
@@ -112,54 +117,6 @@ class DetailWareHouse(APIView):
 
 # Worked on above code 27/05/2024 By Tasmiya
 
-
-class ProductPostApi(APIView):
-    def post(self,request,*args,**Kwargs):
-        try:
-            get_warehouse = request.data.get('warehouse_uid',None)
-            if get_warehouse is None or get_warehouse == '':
-                return get_exception_context({'warehouse_uid':['warehouse_uid is required']})
-
-            request.data._mutable = True
-            get_warehouse=WareHouse.objects.get(uid=request.data['warehouse_uid'])
-
-            get_super_user_for_testing = User.objects.get(is_superuser=True)
-            request.data['warehouse'] = get_warehouse.id
-            request.data['created_by'] = get_super_user_for_testing.id
-            request.data._mutable = False
-
-            get_product_image = request.FILES.getlist('product_image')
-
-            serializer = ProductSerializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-
-                get_product_id = serializer.data.get('id')
-                if get_product_image:
-                    for image in get_product_image:
-                        create_image_obj = ProductImage.objects.create(product_id=get_product_id, image=image, type='uploaded')
-                # else:
-                #     create_image_obj = ProductImage.objects.create(product_id=get_product_id, image='product_image/default_product_image.jpg', type='default')
-
-                return get_serializer_context("Product Created Successfully!")
-            else:
-                return get_exception_context(serializer.errors)
-            
-        except Exception as exception:
-            return get_exception_context(str(exception))
-
-
-class GetProductListAPI(APIView):
-
-    def get(self, request, *args, **kwargs):
-        try:
-            get_product_qs = Product.objects.all().select_related('warehouse','created_by').prefetch_related('product_image')
-            serializer = GetProductListSerializer(get_product_qs, many=True)
-            return get_serializer_context(serializer.data)
-            
-        except Exception as exception:
-            return get_exception_context(str(exception))
-
 from barcode.writer import ImageWriter
 class generate_barcode(APIView):
     
@@ -205,8 +162,7 @@ class ProductPostApi(APIView):
             request.data['created_by'] = get_super_user_for_testing.id
             request.data._mutable = False
             get_product_image = request.FILES.getlist('product_image')
-            print('get_product_image====',get_product_image)
-            print('get file list image',request.FILES.getlist)
+
             serializer = ProductSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()     
@@ -217,8 +173,7 @@ class ProductPostApi(APIView):
                 else:
                     create_image_obj = ProductImage.objects.create(product_id=get_product_id, image='product_image/default_product_image.jpg',type='default')
 
-                return get_serializer_context("Product Created Successfully!")
-                
+                return get_serializer_context(serializer.data)          
             else:
                 return get_exception_context(serializer.errors)
             
@@ -228,16 +183,15 @@ class ProductPostApi(APIView):
 
 class GetProductListAPI(APIView):
 
-    def get(self,request,*args,**kwargs):
+    def get(self, request, *args, **kwargs):
         try:
-            get_product = Product.objects.all().select_related('warehouse','created_by')
-            serializer = ProductListSerializer(get_product,many=True)
+            get_product_qs = Product.objects.all().select_related('warehouse','created_by').prefetch_related('product_image').order_by('-id')
+            serializer = GetProductListSerializer(get_product_qs, many=True)
             return get_serializer_context(serializer.data)
+            
         except Exception as exception:
             return get_exception_context(str(exception))
 
-
-        
 class ProductDeleteApi(APIView):
 
     def delete(self,request,uid,*args,**kwargs):
@@ -273,7 +227,6 @@ class ProductUpdateApi(APIView):
                         create_image_obj = ProductImage.objects.create(product_id=get_product_id, image=image,type='uploded')
                         get_obj = ProductImage.objects.get(product=get_product_id,type='default')
                         print('get_obj====',get_obj)
-                        # get_obj.type == 'default'
                         get_obj.delete()
  
                 return get_serializer_context("Product Updated Succesfully!")
@@ -286,7 +239,7 @@ class ProductUpdateApi(APIView):
 class ProductDetailApi(APIView):
     def get(self,request,uid,*args,**kwargs):
         try:
-            get_product = Product.objects.select_related('warehouse','created_by').get(uid=uid)
+            get_product = Product.objects.select_related('warehouse','created_by').prefetch_related('wiping_product','product_checkout','product_image').get(uid=uid)
             serializer = ProductdetailSerializer(get_product)
             return get_serializer_context(serializer.data) 
         except Exception as exception:
@@ -305,12 +258,13 @@ class ProductImageDeleteApi(APIView):
         except Exception as exception:
             return get_exception_context(str(exception))
 
+# Worked on below code 13/06/2024 By Tasmiya
 
 class WipingQuestionsPostApi(APIView):
     def post(self,request,*args,**kwargs):
         try:
             get_product = request.data.get('product_uid',None)
-            print('get_product====',get_product)
+            # print('get_product====',get_product)
             if get_product is None or get_product == '':
                 return get_exception_context({'product_uid':['product_uid is required']})
             request.data._mutable = True
@@ -319,6 +273,8 @@ class WipingQuestionsPostApi(APIView):
             request.data._mutable = False
             serializer = WipingQuestionSerializer(data=request.data)
             if serializer.is_valid():
+                get_product.product_status = 'CHECKED-IN'
+                get_product.save()
                 serializer.save()
                 return get_serializer_context(serializer.data)
             else:
@@ -356,7 +312,7 @@ class WipingQuestionsGetApi(APIView):
                 serializer = WipingQuestionGetSerializer(get_wiped)
                 return get_serializer_context(serializer.data)
             except Exception as exception:
-                return get_exception_context(serializer.errors)      
+                return get_exception_context('Device Data Wiping Does Not Exist')      
         except Exception as exception:
             return get_exception_context(str(exception))
         
@@ -376,15 +332,93 @@ class WipingQuestionListApi(APIView):
     def get(self,request,*args,**kwargs):
         try:
             try:           
-                get_wiped = WipingQuestionnaire.objects.all().select_related('product')
+                get_wiped = WipingQuestionnaire.objects.filter(product__product_status='CHECKED-IN').select_related('product').order_by('-id')
                 serializer = WipingQuestionGetSerializer(get_wiped,many=True)
                 return get_serializer_context(serializer.data)
             except Exception as exception:
                 return get_exception_context(serializer.errors)        
         except Exception as exception:
             return get_exception_context(str(exception))
-            
-            
-
-
         
+# Worked on above code 27/05/2024 By Tasmiya
+
+
+# Worked on below code 14/06/2024 By Tasmiya
+
+class ProductCheckOutPostApi(APIView):
+    def post(self,request,*args,**kwargs):
+        try:
+            get_product = request.data.get('product_uid',None)
+            if get_product is None or get_product == '':
+                return get_exception_context({'product_uid':['product_uid is required']})
+            request.data._mutable = True
+            get_obj = Product.objects.get(uid=request.data['product_uid'])
+            request.data['product'] = get_obj.id
+            request.data._mutable = False
+            serializer = ProductCheckOutSerializer(data=request.data)
+            if serializer.is_valid():
+                get_obj.product_status = 'CHECKED-OUT'
+                get_obj.save()
+                serializer.save()        
+                return get_serializer_context(serializer.data)
+            else:
+                return get_exception_context(serializer.errors)
+        except Exception as exception:
+            return get_exception_context(str(exception))
+            
+
+class ProductCheckOutUpdateApi(APIView):
+    def put(self,request,uid,*args,**kwargs):
+        try:
+            get_product_checkout = ProductCheckOut.objects.get(uid=uid)
+            get_product = request.data.get('product_uid',None)
+            if get_product:
+                request.data._mutable = True
+                get_product_obj  = Product.objects.get(uid=request.data['product_uid'])
+                request.data['product'] = get_product_obj.id
+                request.data._mutable = False
+            serializer = ProductCheckOutUpdateSerializer(get_product_checkout,data=request.data,partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return get_serializer_context(serializer.data)
+            else:
+                return get_exception_context(serializer.errors)
+            
+        except Exception as exception:
+            return get_exception_context(str(exception))
+        
+class ProductCheckOutGetApi(APIView):
+    def get(self,request,uid,*args,**kwargs):
+        try:
+            get_product_checkout = ProductCheckOut.objects.select_related('product').get(uid=uid)
+            serializer = ProductCheckoutGetSerializer(get_product_checkout)
+            return get_serializer_context(serializer.data)
+        except Exception as exception:
+            return get_exception_context(str(exception))
+            
+
+class ProductCheckOutListApi(APIView):
+    def get(self,request,*args,**kwargs):
+        try:
+            get_obj = ProductCheckOut.objects.filter(product__product_status='CHECKED-OUT').select_related('product').order_by('-id')
+            serializer = ProductCheckoutGetSerializer(get_obj,many=True)
+            return get_serializer_context(serializer.data)
+        except Exception as exception:
+            return get_exception_context(str(exception))
+        
+class ProductCheckOutDeleteApi(APIView):
+    def delete(self,request,uid,*args,**kwargs):
+        try:
+            try:
+                get_obj = ProductCheckOut.objects.get(uid=uid)
+                get_obj.delete()
+                return get_serializer_context('Product CheckOut Deleted Successfully!')
+            except Exception as exception:
+                return get_exception_context('Product CheckOut does not exist!')
+        except Exception as exception:
+            return get_exception_context(str(exception))
+        
+# Worked on above code 14/06/2024 By Tasmiya
+
+
+

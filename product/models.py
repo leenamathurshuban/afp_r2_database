@@ -59,6 +59,7 @@ class Product(BaseModel):
     mdm = models.BooleanField(default=False,null=True)
     created_by = models.ForeignKey(User, related_name="created_by_user", on_delete=models.CASCADE, blank=True, null=True) # Added on 05/06/2024
     bar_code  = models.FileField(upload_to='bar_code/',blank=True, null=True)
+    apple_care = models.BooleanField(default=False,blank=True,null=True) # Added on 19/06/2024 By Tasmiya
 
 
     def __str__(self):
@@ -122,7 +123,7 @@ class ProductCheckOut(BaseModel):
     first_name = models.CharField(max_length=200,blank=True,null=True)
     last_name = models.CharField(max_length=200,blank=True,null=True)
 
-    class Meta:
+    class Meta: 
         verbose_name_plural = 'Product Checkout'
     
     def __str__(self):
