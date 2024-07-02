@@ -64,3 +64,44 @@ class User(AbstractUser):
     # def save(self, *args, **kwargs):
     #     super(User, self).save(*args, **kwargs)
 
+
+
+class UserRolePermission(models.Model):
+    
+    uid = models.UUIDField(editable=False,default=uuid.uuid4,unique=True,blank=True)
+    role = models.ForeignKey(Role,related_name='role_permissions',on_delete=models.CASCADE)
+    permission_module = models.CharField(max_length=255,blank=True, null=True)
+    can_add = models.BooleanField(default=False,blank=True, null=True)
+    can_update = models.BooleanField(default=False,blank=True, null=True)
+    can_list = models.BooleanField(default=False,blank=True, null=True)
+    can_delete = models.BooleanField(default=False,blank=True, null=True)
+    can_do_all = models.BooleanField(default=False,blank=True, null=True)
+    can_assign_permission = models.BooleanField(default=False, blank=True, null=True)
+    can_list_log = models.BooleanField(default=False, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True,null=True)
+    updated_at = models.DateTimeField(auto_now=True,null=True)
+
+    def __str__(self):
+        return self.role.role_name
+
+    class Meta:
+        verbose_name_plural = 'User Role Permissions'
+        unique_together = ('role', 'permission_module')
+
+    def save(self, *args, **kwargs):
+    
+        if self.can_do_all == True and self.permission_module == 'all':
+            get_qs = UserRolePermission.objects.filter(role__role_name = self.role.role_name).update(
+                can_do_all = True,can_add = True,
+                can_update = True,can_delete = True,
+                can_list = True,can_assign_permission=True,can_list_log=True
+                )
+
+            self.can_add = True
+            self.can_update = True
+            self.can_delete = True
+            self.can_list = True
+            self.can_assign_permission = True
+            self.can_list_log = True
+
+        return super(UserRolePermission, self).save(*args, **kwargs)

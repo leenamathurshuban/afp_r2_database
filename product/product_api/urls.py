@@ -13,6 +13,7 @@ from product.product_api.views import (
     ProductDeleteApi,
     ProductUpdateApi,
     ProductDetailApi,
+    GetProductDetailByBarCodeAPI,
 
     ProductImageDeleteApi,
 
@@ -46,6 +47,7 @@ path('product-delete-api/<str:uid>/',ProductDeleteApi.as_view(),name='product-de
 path('product-update-api/<str:uid>/',ProductUpdateApi.as_view(),name='product-update-api'),
 path('product-detail-api/<str:uid>/',ProductDetailApi.as_view(),name='product-detail-api'),
 path('product-list-view/',GetProductListAPI.as_view(),name='product-list-view'),
+path('bar-code-product-detail/<str:bar_code_number>/',GetProductDetailByBarCodeAPI.as_view(),name='bar-code-product-detail'),# Added on 21/06/2024
 
 path('product-image-delete-api/<str:uid>/',ProductImageDeleteApi.as_view(),name="product-image-delete-api"),
 

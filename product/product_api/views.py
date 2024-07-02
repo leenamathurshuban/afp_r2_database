@@ -21,7 +21,6 @@ from product.product_api.serializers import (
     UpdateWareHouseSerializer,
 
     ProductSerializer,
-    ProductListSerializer,
     ProductUpdateSerializer,
     ProductdetailSerializer,
     GetProductListSerializer,
@@ -438,5 +437,14 @@ class ProductCheckOutDeleteApi(APIView):
         
 # Worked on above code 14/06/2024 By Tasmiya
 
-
+# Added below code on 21/06/2024
+class GetProductDetailByBarCodeAPI(APIView):
+    def get(self,request,bar_code_number,*args,**kwargs):
+        try:
+            get_barcode_product = Product.objects.select_related('warehouse','created_by').prefetch_related('wiping_product','product_checkout','product_image').get(bar_code_number=bar_code_number)
+            serializer = ProductdetailSerializer(get_barcode_product)
+            return get_serializer_context(serializer.data) 
+        except Exception as exception:
+            return get_exception_context(str(exception))
+# Added above code on 21/06/2024
 

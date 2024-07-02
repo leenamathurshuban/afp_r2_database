@@ -16,7 +16,8 @@ from rest_framework_simplejwt.backends import TokenBackend
 
 from account.models import (
     User,
-    Role
+    Role,
+    UserRolePermission,
 )
 from account.account_api.serializers import (
     CustomTokenSerializer,
@@ -24,9 +25,11 @@ from account.account_api.serializers import (
     UserUpdateSerializer,
     UserDetailSerializer,
     UserListSerializer,
+    UserLoginSerializer,
 
     RoleSerializer,
     RoleUpdateSerializer,
+    RoleSerializerForLogin,
     
     
 )
@@ -68,7 +71,7 @@ class LoginView(APIView):
                 return get_exception_context('password field is required!')
             
             try:
-                get_user_obj = User.objects.get(username = get_username)
+                get_user_obj = User.objects.select_related('user_role').prefetch_related('user_role__role_permissions').get(username = get_username)
             except Exception as exception:
                 return get_exception_context(str(exception))
             
@@ -76,14 +79,24 @@ class LoginView(APIView):
 
             if user is not None:
                 token = CustomTokenSerializer().get_token(user)
+
+                # Added below code on 28/06/2024
+                serializer = UserLoginSerializer(get_user_obj,context = {'refresh':str(token),'access':str(token.access_token),})
                 context = {
                     'status':status.HTTP_200_OK,
                     'success':True,
-                    'refresh':str(token),
-                    'access':str(token.access_token),
-                    'user_uid':get_user_obj.user_uid,
-                    'username':get_user_obj.username,
+                    'response':serializer.data
                 }
+                # Added below code on 28/06/2024
+
+                # context = {
+                #     'status':status.HTTP_200_OK,
+                #     'success':True,
+                #     'refresh':str(token),
+                #     'access':str(token.access_token),
+                #     'user_uid':get_user_obj.user_uid,
+                #     'username':get_user_obj.username,
+                # }
                 return Response(context,status=status.HTTP_200_OK)
             
             else:
@@ -131,6 +144,13 @@ class RolePostApi(APIView):
             serializer =RoleSerializer(data=request.data)  
             if  serializer.is_valid():
                 serializer.save()
+
+                if not UserRolePermission.objects.filter(role_id=serializer.data.get('id')).exists():
+                    module_list = ['all', 'permissions', 'warehouse', 'role', 'user', 'product', 'product_check_in', 'product_check_out', 'user_activity_log']
+                    create_permission = [
+                        UserRolePermission(role_id=serializer.data.get('id'),permission_module=module) for module in module_list
+                    ]
+                    UserRolePermission.objects.bulk_create(create_permission)
                 return get_serializer_context(serializer.data)      
             else:
                 return get_exception_context(serializer.errors)
@@ -193,7 +213,7 @@ class RoleDetailView(APIView):
     def get(self,request,uid,*args, **kwargs):
         try:
             get_role = Role.objects.get(role_uid=uid)
-            serializer = RoleSerializer(get_role)
+            serializer = RoleSerializerForLogin(get_role)
             return get_serializer_context(serializer.data) 
 
         except Exception as exception:
@@ -230,5 +250,56 @@ class UserDeleteApi(APIView):
 # Worked on above code 27/05/2024 By Tasmiya
 
 
-            
+# Added below code on 02/07/2024
+def get_obj(i,role_uid):
+    print("i===",i)
+    try:
+        obj = UserRolePermission.objects.get(uid=i['uid'],role__role_uid=role_uid)
+        obj.can_add=i['can_add'] if 'can_add' in i else obj.can_add
+        obj.can_update=i['can_update'] if 'can_update' in i else obj.can_update
+        obj.can_list=i['can_list'] if 'can_list' in i else obj.can_list
+        obj.can_delete=i['can_delete'] if 'can_delete' in i else obj.can_delete
+        obj.can_do_all=i['can_do_all'] if 'can_do_all' in i else obj.can_do_all
+        obj.can_assign_permission=i['can_assign_permission'] if 'can_assign_permission' in i else obj.can_assign_permission
+        obj.can_list_log=i['can_list_log'] if 'can_list_log' in i else obj.can_list_log
+        obj.save()
+
+        if UserRolePermission.objects.filter(role__role_name = obj.role.role_name,can_do_all=True,permission_module='all').exists():
+            get_qs = UserRolePermission.objects.filter(role__role_name = obj.role.role_name).update(
+                    can_do_all = True,can_add = True,
+                    can_update = True,can_delete = True,
+                    can_list = True,can_assign_permission=True,can_list_log=True
+                    )
         
+        context = {
+            'status':status.HTTP_200_OK,
+            'success':True,
+            'response':"Permissions Updated Successfully!"
+        }
+        return context
+
+    except UserRolePermission.DoesNotExist:
+        context = {
+            'status':status.HTTP_400_BAD_REQUEST,
+            'success':False,
+            'response':"Permission Module does not exist!"
+        }
+        return context
+
+class UpdateRolePermissions(APIView):
+
+    def put(self, request, role_uid, *args, **kwargs):
+        try:
+            lst = [get_obj(i,role_uid) for i in request.data['data']]
+            context = {
+                'status':status.HTTP_200_OK,
+                'success':True,
+                'response':None
+            }
+            if len(lst) > 0:
+                context['response'] = 'Permissions Updated Successfully!'
+            return Response(context)
+        
+        except Exception as exception:
+            return get_exception_context(str(exception))
+# Added above code on 02/07/2024
