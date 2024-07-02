@@ -27,9 +27,10 @@ from product.product_api.views import (
     ProductCheckOutGetApi,
     ProductCheckOutListApi,
     ProductCheckOutDeleteApi,
+    MultipleProductForDetailApi,
 
     generate_barcode, # For testing Purpose
-
+    
 )
 
 urlpatterns = [
@@ -44,6 +45,7 @@ path('product-post-api/',ProductPostApi.as_view(),name='product-post-api'),
 path('product-delete-api/<str:uid>/',ProductDeleteApi.as_view(),name='product-delete-api'),
 path('product-update-api/<str:uid>/',ProductUpdateApi.as_view(),name='product-update-api'),
 path('product-detail-api/<str:uid>/',ProductDetailApi.as_view(),name='product-detail-api'),
+path('multiple-product-detail-api/',MultipleProductForDetailApi.as_view(),name='multiple-product-detail-api'),
 path('product-list-view/',GetProductListAPI.as_view(),name='product-list-view'),
 
 path('product-image-delete-api/<str:uid>/',ProductImageDeleteApi.as_view(),name="product-image-delete-api"),
@@ -62,5 +64,8 @@ path('product-checkout-delete-api/<str:uid>/',ProductCheckOutDeleteApi.as_view()
 
 
 path('bar-code/',generate_barcode.as_view()), # For testing Purpose
+
+
+
 
 ]

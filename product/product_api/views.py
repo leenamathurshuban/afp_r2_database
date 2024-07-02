@@ -6,6 +6,7 @@ from account.helpers import (
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework import generics
 from product.models import (
     WareHouse,
     Product,
@@ -33,6 +34,8 @@ from product.product_api.serializers import (
     ProductCheckOutSerializer,
     ProductCheckOutUpdateSerializer,
     ProductCheckoutGetSerializer,
+
+    ProductSerializerForMultipleProduct,
 )
 from account.models import (
 
@@ -42,13 +45,15 @@ from account.models import (
 import uuid
 import barcode
 from barcode.writer import ImageWriter
+from rest_framework.permissions import IsAuthenticated
+
 
 
 # Create your views here.
 # Worked on below code 27/05/2024 By Tasmiya
 
-class PostWareHouse(APIView): 
-
+class PostWareHouse(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self,request,*args,**kwargs):
         try:
             data = request.data
@@ -64,7 +69,8 @@ class PostWareHouse(APIView):
             return get_exception_context(str(exception))
     
  
-class UpdateWareHouse(APIView):    
+class UpdateWareHouse(APIView):
+
     def put(self, request,uid,*args,**kwargs):
         uuid = kwargs.get('uid',None)
         try:
@@ -179,18 +185,83 @@ class ProductPostApi(APIView):
             
         except Exception as exception:
             return get_exception_context(str(exception))
-        
 
-class GetProductListAPI(APIView):
+from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+import django_filters
+from django_filters import rest_framework as filters
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework import filters as search_fil 
 
-    def get(self, request, *args, **kwargs):
+
+
+from rest_framework import pagination
+
+class ProductFilter(django_filters.FilterSet):
+    class Meta:
+        model = Product
+        fields = ['warehouse__warehouse_name','created_by__email','serial_number','device_type','product_status']
+
+class CustomPagination(pagination.PageNumberPagination):
+    # page_size = 1
+    page_size_query_param = None
+    # max_page_size = 50
+    # page_query_param = 'p'
+
+    def get_paginated_response(self, data):
+        # response = Response(data)
+        # response['count'] = self.page.paginator.count
+        # response['next'] = self.get_next_link()
+        # response['previous'] = self.get_previous_link()
+        context = {
+        'status':status.HTTP_200_OK,
+        'success':True,
+        'response':data
+        }
+        return Response(context)
+
+def get_response(exception=None):
+    context = {
+        'status':status.HTTP_400_BAD_REQUEST,
+        'success':False,
+        'response':exception
+    }
+    return context
+
+
+class GetProductListAPI(generics.ListAPIView):
+    serializer_class = GetProductListSerializer
+    # queryset =  Product.objects.all().select_related('warehouse','created_by').prefetch_related('product_image').order_by('-id')
+    # filter_backends = (DjangoFilterBackend,search_fil.SearchFilter)
+    # filter_class = ProductFilter
+    # search_fields = ['serial_number','device_type','product_status']
+    # pagination_class = CustomPagination
+    # filterset_fields = ('serial_number','device_type','product_status')
+    def get_queryset(self):
+
+        serializer_class = GetProductListSerializer
+        filter_backends = (DjangoFilterBackend,search_fil.SearchFilter)
+        filter_class = ProductFilter
+        search_fields = ['serial_number','device_type','product_status']
+        return Product.objects.all().select_related('warehouse','created_by').prefetch_related('product_image').order_by('-id')
+    def list(self, request, *args, **kwargs):
         try:
-            get_product_qs = Product.objects.all().select_related('warehouse','created_by').prefetch_related('product_image').order_by('-id')
-            serializer = GetProductListSerializer(get_product_qs, many=True)
-            return get_serializer_context(serializer.data)
-            
+            queryset = self.get_queryset()
+            serializer = self.serializer_class(queryset, many=True)
+            return get_serializer_context(serializer.data)  
         except Exception as exception:
-            return get_exception_context(str(exception))
+            return get_exception_context(str(exception)) 
+
+
+    
+    # def list(self, request, *args, **kwargs):
+    #     try:
+    #         get_product_qs = Product.objects.all().select_related('warehouse','created_by').prefetch_related('product_image').order_by('-id')
+    #         serializer = GetProductListSerializer(get_product_qs, many=True)
+    #         return get_serializer_context(serializer.data)
+            
+    #     except Exception as exception:
+    #         return get_exception_context(str(exception))
 
 class ProductDeleteApi(APIView):
 
@@ -229,7 +300,7 @@ class ProductUpdateApi(APIView):
                         print('get_obj====',get_obj)
                         get_obj.delete()
  
-                return get_serializer_context("Product Updated Succesfully!")
+                return get_serializer_context(serializer.data)
             else:
                 return get_exception_context(serializer.errors)
             
@@ -346,6 +417,7 @@ class WipingQuestionListApi(APIView):
 # Worked on below code 14/06/2024 By Tasmiya
 
 class ProductCheckOutPostApi(APIView):
+
     def post(self,request,*args,**kwargs):
         try:
             get_product = request.data.get('product_uid',None)
@@ -419,6 +491,39 @@ class ProductCheckOutDeleteApi(APIView):
             return get_exception_context(str(exception))
         
 # Worked on above code 14/06/2024 By Tasmiya
+
+
+
+
+class MultipleProductForDetailApi(generics.ListAPIView):
+     serializer_class = ProductdetailSerializer
+
+     def get_queryset(self):
+        # uids = self.request.data.getlist('uid', [])
+        uids = self.request.query_params.getlist('uid',[])
+        print('uid====',uids)
+        return Product.objects.filter(uid__in=uids).select_related('warehouse','created_by').prefetch_related('wiping_product','product_checkout','product_image')
+     def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            serializer = self.serializer_class(queryset, many=True)
+            return get_serializer_context(serializer.data)  
+        except Exception as exception:
+            return get_exception_context(str(exception)) 
+        
+
+# class Multipleproductget(APIView):
+#     def get(self,request,*args,**kwargs):
+#         try:
+#             uids = request.data.getlist('uid',None)
+#             uids =self.request.query_params.get('uid',[])
+#             print('uid===',uids)
+#             get_obj = Product.objects.filter(uid__in=uids).select_related('warehouse','created_by').prefetch_related('wiping_product','product_checkout','product_image')
+#             print('get-obj====',get_obj)
+#             serializer = ProductSerializerForMultipleProduct(get_obj,many=True)
+#             return get_serializer_context(serializer.data)
+#         except Exception as exception:
+#             return get_exception_context(str(exception))
 
 
 

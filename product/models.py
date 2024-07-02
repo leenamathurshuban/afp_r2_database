@@ -60,6 +60,17 @@ class Product(BaseModel):
     created_by = models.ForeignKey(User, related_name="created_by_user", on_delete=models.CASCADE, blank=True, null=True) # Added on 05/06/2024
     bar_code  = models.FileField(upload_to='bar_code/',blank=True, null=True)
     apple_care = models.BooleanField(default=False,blank=True,null=True) # Added on 19/06/2024 By Tasmiya
+    cpu = models.TextField(blank=True,null=True) # Added on 27/06/2024
+    gpu = models.TextField(blank=True,null=True) # Added on 27/06/2024
+    source = models.TextField(blank=True,null=True)  # Added on 1/07/2024
+    top_grade = models.CharField(max_length=50,blank=True,null=True) # Added on 1/07/2024
+
+
+    def save(self, *args, **kwargs): # Added on 27/06/2024
+       
+        if self.serial_number:
+            self.serial_number = self.serial_number.upper()
+        super().save(*args, **kwargs)
 
 
     def __str__(self):
@@ -68,7 +79,7 @@ class Product(BaseModel):
     class Meta:
         verbose_name_plural = 'Product'
 
-    
+     
     # def save(self, *args, **kwargs):
 
     #     if self.id:

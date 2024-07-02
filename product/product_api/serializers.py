@@ -60,6 +60,10 @@ class ProductSerializer(serializers.ModelSerializer):
          get_grade = attrs.get('grade',None)
          get_grade_notes = attrs.get('grade_notes',None)
          get_technical_notes = attrs.get('technical_notes',None)
+         get_cpu = attrs.get('cpu',None)
+         get_gpu = attrs.get('gpu',None)
+         get_source = attrs.get('source',None)
+         get_top_grade = attrs.get('top_grade',None)
          
 
          
@@ -123,13 +127,21 @@ class ProductSerializer(serializers.ModelSerializer):
          if get_product_instance.exists():
                raise serializers.ValidationError({'error':'Product already Checked-in!'})
          
+         if get_cpu is None or get_cpu == '':
+             raise serializers.ValidationError({'CPU':'CPU is required'})
+         
+         if get_gpu is None or get_gpu == '':
+             raise serializers.ValidationError({'GPU':'GPU is required'})
+         
+         if get_source is None or get_source == '':
+             raise serializers.ValidationError({'source':'source is required'})
+         
+         if get_top_grade is None or get_top_grade == '':
+             raise serializers.ValidationError({'top_grade':'top_grade is required'})
+         
          return attrs
 
-
     
-      
-
-
 # Added below code on 05/06/2024
 class UserListSerializerForProduct(serializers.ModelSerializer):
 
@@ -425,3 +437,13 @@ class ProductCheckoutGetSerializer(serializers.ModelSerializer):
 
 # Worked on above code 14/06/2024 By Tasmiya
 
+class ProductSerializerForMultipleProduct(serializers.ModelSerializer):
+      wiping_product = WipingQuestionSerializerForProductDetail(many=True)
+      product_checkout  = ProductCheckOutSerializerForProductDetail(many=True)
+      warehouse = WareHouseSerializer()
+      created_by = UserListSerializerForProduct()
+      product_image = ProductImageSerializer(many=True)
+
+      class Meta:
+         model = Product
+         fields = '__all__'
