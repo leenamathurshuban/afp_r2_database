@@ -22,7 +22,6 @@ from product.product_api.serializers import (
     UpdateWareHouseSerializer,
 
     ProductSerializer,
-    ProductListSerializer,
     ProductUpdateSerializer,
     ProductdetailSerializer,
     GetProductListSerializer,
@@ -38,7 +37,6 @@ from product.product_api.serializers import (
     ProductSerializerForMultipleProduct,
 )
 from account.models import (
-
     User
 )
 
@@ -53,7 +51,7 @@ from rest_framework.permissions import IsAuthenticated
 # Worked on below code 27/05/2024 By Tasmiya
 
 class PostWareHouse(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     def post(self,request,*args,**kwargs):
         try:
             data = request.data
@@ -123,6 +121,70 @@ class DetailWareHouse(APIView):
 
 # Worked on above code 27/05/2024 By Tasmiya
 
+
+class ProductPostApi(APIView):
+    def post(self,request,*args,**Kwargs):
+        try:
+            get_warehouse = request.data.get('warehouse_uid',None)
+            if get_warehouse is None or get_warehouse == '':
+                return get_exception_context({'warehouse_uid':['warehouse_uid is required']})
+
+            request.data._mutable = True
+            get_warehouse=WareHouse.objects.get(uid=request.data['warehouse_uid'])
+
+            get_super_user_for_testing = User.objects.get(is_superuser=True)
+            request.data['warehouse'] = get_warehouse.id
+            request.data['created_by'] = get_super_user_for_testing.id
+            request.data._mutable = False
+
+            get_product_image = request.FILES.getlist('product_image')
+
+            serializer = ProductSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+
+                get_product_id = serializer.data.get('id')
+
+                # Added below code on 20/06/2024
+                serial_number = serializer.data.get('serial_number')
+                get_barcode_name = f'AFP{serial_number}{get_product_id}'
+                from barcode.writer import ImageWriter
+                import uuid
+
+                ean = barcode.codex.Code128(get_barcode_name, writer=ImageWriter())
+                unique_filename = uuid.uuid4()
+
+                get_product_obj = Product.objects.get(id=get_product_id)
+                get_product_obj.bar_code = ean.save(f'media/bar_code/{unique_filename}')
+                get_product_obj.bar_code_number = get_barcode_name
+                get_product_obj.save()
+                # Added above code on 20/06/2024
+
+                if get_product_image:
+                    for image in get_product_image:
+                        create_image_obj = ProductImage.objects.create(product_id=get_product_id, image=image, type='uploaded')
+                else:
+                    create_image_obj = ProductImage.objects.create(product_id=get_product_id, image='product_image/default_product_image.jpg', type='default')
+
+                return get_serializer_context("Product Created Successfully!")
+            else:
+                return get_exception_context(serializer.errors)
+            
+        except Exception as exception:
+            return get_exception_context(str(exception))
+
+
+class GetProductListAPI(APIView):
+
+    def get(self, request, *args, **kwargs):
+        try:
+            get_product_qs = Product.objects.all().select_related('warehouse','created_by').prefetch_related('product_image').order_by('-id')
+            serializer = GetProductListSerializer(get_product_qs, many=True)
+            return get_serializer_context(serializer.data)
+            
+        except Exception as exception:
+            return get_exception_context(str(exception))
+
 from barcode.writer import ImageWriter
 class generate_barcode(APIView):
     
@@ -152,48 +214,12 @@ class generate_barcode(APIView):
 
         return Response('filename')
 
-
-class ProductPostApi(APIView):
-    def post(self,request,*args,**Kwargs):
-        try:
-            get_warehouse = request.data.get('warehouse_uid',None)
-            if get_warehouse is None or get_warehouse == '':
-                return get_exception_context({'warehouse_uid':['warehouse_uid is required']})     
-            request.data._mutable = True
-            # print('request data===',request.data)
-            get_warehouse=WareHouse.objects.get(uid=request.data['warehouse_uid'])
-            get_super_user_for_testing = User.objects.get(is_superuser=True)
-            # print('get_warehouse:===',get_warehouse)
-            request.data['warehouse'] = get_warehouse.id
-            request.data['created_by'] = get_super_user_for_testing.id
-            request.data._mutable = False
-            get_product_image = request.FILES.getlist('product_image')
-
-            serializer = ProductSerializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save()     
-                get_product_id = serializer.data.get('id')
-                if get_product_image:
-                    for image in get_product_image:
-                        create_image_obj = ProductImage.objects.create(product_id=get_product_id, image=image,type='uploded')
-                else:
-                    create_image_obj = ProductImage.objects.create(product_id=get_product_id, image='product_image/default_product_image.jpg',type='default')
-
-                return get_serializer_context(serializer.data)          
-            else:
-                return get_exception_context(serializer.errors)
-            
-        except Exception as exception:
-            return get_exception_context(str(exception))
-
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
 import django_filters
 from django_filters import rest_framework as filters
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import filters as search_fil 
-
-
 
 from rest_framework import pagination
 
@@ -229,28 +255,28 @@ def get_response(exception=None):
     return context
 
 
-class GetProductListAPI(generics.ListAPIView):
-    serializer_class = GetProductListSerializer
+# class GetProductListAPI(generics.ListAPIView):
+#     serializer_class = GetProductListSerializer
     # queryset =  Product.objects.all().select_related('warehouse','created_by').prefetch_related('product_image').order_by('-id')
     # filter_backends = (DjangoFilterBackend,search_fil.SearchFilter)
     # filter_class = ProductFilter
     # search_fields = ['serial_number','device_type','product_status']
     # pagination_class = CustomPagination
     # filterset_fields = ('serial_number','device_type','product_status')
-    def get_queryset(self):
+    # def get_queryset(self):
 
-        serializer_class = GetProductListSerializer
-        filter_backends = (DjangoFilterBackend,search_fil.SearchFilter)
-        filter_class = ProductFilter
-        search_fields = ['serial_number','device_type','product_status']
-        return Product.objects.all().select_related('warehouse','created_by').prefetch_related('product_image').order_by('-id')
-    def list(self, request, *args, **kwargs):
-        try:
-            queryset = self.get_queryset()
-            serializer = self.serializer_class(queryset, many=True)
-            return get_serializer_context(serializer.data)  
-        except Exception as exception:
-            return get_exception_context(str(exception)) 
+    #     serializer_class = GetProductListSerializer
+    #     filter_backends = (DjangoFilterBackend,search_fil.SearchFilter)
+    #     filter_class = ProductFilter
+    #     search_fields = ['serial_number','device_type','product_status']
+    #     return Product.objects.all().select_related('warehouse','created_by').prefetch_related('product_image').order_by('-id')
+    # def list(self, request, *args, **kwargs):
+    #     try:
+    #         queryset = self.get_queryset()
+    #         serializer = self.serializer_class(queryset, many=True)
+    #         return get_serializer_context(serializer.data)  
+    #     except Exception as exception:
+    #         return get_exception_context(str(exception)) 
 
 
     
@@ -492,7 +518,16 @@ class ProductCheckOutDeleteApi(APIView):
         
 # Worked on above code 14/06/2024 By Tasmiya
 
-
+# Added below code on 21/06/2024
+class GetProductDetailByBarCodeAPI(APIView):
+    def get(self,request,bar_code_number,*args,**kwargs):
+        try:
+            get_barcode_product = Product.objects.select_related('warehouse','created_by').prefetch_related('wiping_product','product_checkout','product_image').get(bar_code_number=bar_code_number)
+            serializer = ProductdetailSerializer(get_barcode_product)
+            return get_serializer_context(serializer.data) 
+        except Exception as exception:
+            return get_exception_context(str(exception))
+# Added above code on 21/06/2024
 
 
 class MultipleProductForDetailApi(generics.ListAPIView):

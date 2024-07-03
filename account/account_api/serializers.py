@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from account.models import (
     User,
-    Role
+    Role,
+    UserRolePermission,
 )
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -204,4 +205,37 @@ class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id','user_uid','username','first_name','last_name','user_role','phone_number','profile_image','employee_number','afp_code']
+
+
+# Added below code on 02/07/2024
+class UserRolePermissionSerializerForLogin(serializers.ModelSerializer):
+    class Meta:
+        model = UserRolePermission
+        exclude = ['created_at','updated_at']
+
+
+class RoleSerializerForLogin(serializers.ModelSerializer):
+    role_permissions = UserRolePermissionSerializerForLogin(many=True)
+
+    class Meta:
+        model = Role
+        fields = ['id','role_uid','role_name','image','status','role_permissions']
+# Added above code on 02/07/2024
+
+class UserLoginSerializer(serializers.ModelSerializer):
+    user_role = RoleSerializerForLogin()
+
+    class Meta:
+        model = User
+        fields = ['id','user_uid','username','user_role']
+
+    def to_representation(self,instance):
+        data = super(UserLoginSerializer, self).to_representation(instance)
+        get_refresh = self.context.get('refresh')
+        get_access = self.context.get('access')
+
+        data['refresh'] = get_refresh
+        data['access'] = get_access
+        return data
+        
     

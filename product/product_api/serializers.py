@@ -154,30 +154,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
       model = ProductImage
       fields = ['id','uid','product','image']
 
-class ProductListSerializer(serializers.ModelSerializer):
-   warehouse = WareHouseSerializer()
-   created_by = UserListSerializerForProduct()
-   product_image = ProductImageSerializer(many=True)
 
-   class Meta:
-      model = Product
-      fields = '__all__'
-
-   def to_representation(self, instance):
-       data = super().to_representation(instance)
-       if data['find_my_mac'] == True:
-           data['find_my_mac'] = "Yes"
-           
-       if data['find_my_mac'] == False:
-           data['find_my_mac'] = "No"
-                
-       if data['mdm'] == True:
-           data['mdm'] = "Yes"
-
-       if data['mdm'] == False:
-           data['mdm'] = "No"
-
-       return data
 
 
 class ProductUpdateSerializer(serializers.ModelSerializer):
@@ -270,6 +247,9 @@ class ProductdetailSerializer(serializers.ModelSerializer):
                         'image': '/media/product_image/default_product_image.jpg', 
                         'type': 'default'
                 }]
+       if data['bar_code'] is not None and '/media/media/' in data['bar_code']:
+            #  print('data:-====',data['bar_code'].split('/media/'))
+            data['bar_code'] = '/'+ data['bar_code'].split('/media/')[1]
            
        return data
 
@@ -292,7 +272,7 @@ class GetProductListSerializer(serializers.ModelSerializer):
            
        if data['find_my_mac'] == False:
            data['find_my_mac'] = "No"
-                
+         
        if data['mdm'] == True:
            data['mdm'] = "Yes"
 
@@ -313,6 +293,10 @@ class GetProductListSerializer(serializers.ModelSerializer):
                     'image': '/media/product_image/default_product_image.jpg', 
                     'type': 'default'
                   }]
+
+       if data['bar_code'] is not None and '/media/media/' in data['bar_code']:
+            #  print('data:-====',data['bar_code'].split('/media/'))
+            data['bar_code'] = '/'+ data['bar_code'].split('/media/')[1]
            
        return data
 # Added above code on 05/06/2024
