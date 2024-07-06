@@ -120,6 +120,8 @@ class ProductSerializer(serializers.ModelSerializer):
                                                       storage_size= get_storage_size,
                                                       )
 
+         print('get_product_instance:-===', get_product_instance)
+
          if get_product_instance.exists():
                raise serializers.ValidationError({'error':'Product already Checked-in!'})
          

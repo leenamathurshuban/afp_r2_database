@@ -37,21 +37,30 @@ from account.helpers import (
     get_exception_context,
     get_serializer_context,
 )
+from account.helpers import get_user_from_token
+
 
 
 class RegisterAPI(APIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            data = request.data
-            serializer = UserRegisterSerializer(data=data)
-            if serializer.is_valid():
-                serializer.save()
-                return get_serializer_context(serializer.data)
-            
+            user = get_user_from_token(request)
+            role_name = user.user_role.role_name
+            get_permission = UserRolePermission.objects.filter(role__role_name=role_name,can_add=True,permission_module='user')
+            if get_permission:
+
+                data = request.data
+                serializer = UserRegisterSerializer(data=data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return get_serializer_context(serializer.data)
+                
+                else:
+                    # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
+                    return get_exception_context(serializer.errors)
             else:
-                # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
-                return get_exception_context(serializer.errors)
+                return get_exception_context("Unauthorized access!")
 
         except Exception as exception:
             return get_exception_context(str(exception))
@@ -109,16 +118,23 @@ class LoginView(APIView):
 class UserUpdateView(APIView):
     def put(self, request,uid, *args, **kwargs):
         try:
-            data = request.data
-            get_user_obj = User.objects.get(user_uid= uid)
+            user = get_user_from_token(request)
+            role_name = user.user_role.role_name
+            get_user_permission = UserRolePermission.objects.filter(role__role_name=role_name, can_update=True, permission_module='user')
 
-            serializer = UserUpdateSerializer(get_user_obj,data=data,context={'user':get_user_obj},partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return get_serializer_context(serializer.data)
+            if get_user_permission:
+                data = request.data
+                get_user_obj = User.objects.get(user_uid= uid)
+
+                serializer = UserUpdateSerializer(get_user_obj,data=data,context={'user':get_user_obj},partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return get_serializer_context(serializer.data)
+                else:
+                    # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
+                    return get_exception_context(serializer.errors)
             else:
-                # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
-                return get_exception_context(serializer.errors)
+                return get_exception_context("Unauthorized access!")
 
         except Exception as exception:
             return get_exception_context(str(exception))
@@ -127,9 +143,16 @@ class UserUpdateView(APIView):
 class UserListView(ListAPIView):
     def get(self, request, *args, **kwargs):
         try:
-            get_user_qs = User.objects.filter(is_superuser=False).select_related('user_role').order_by('id')
-            serializer = UserListSerializer(get_user_qs,many=True)
-            return get_serializer_context(serializer.data)
+            user = get_user_from_token(request)
+            get_role_name = user.user_role.role_name
+            get_permission = UserRolePermission.objects.filter(role__role_name=get_role_name,can_list=True,permission_module='user')
+            if get_permission:
+
+                get_user_qs = User.objects.filter(is_superuser=False).select_related('user_role').order_by('id')
+                serializer = UserListSerializer(get_user_qs,many=True)
+                return get_serializer_context(serializer.data)
+            else:
+                return get_exception_context("Unauthorized access!")
 
         except Exception as exception:
             return get_exception_context(str(exception))
@@ -141,19 +164,26 @@ class RolePostApi(APIView):
     
     def post(self,request,*args,**kwargs):
         try:
-            serializer =RoleSerializer(data=request.data)  
-            if  serializer.is_valid():
-                serializer.save()
+            user = get_user_from_token(request)
+            get_role_name = user.user_role.role_name
+            get_permission = UserRolePermission.objects.filter(role__role_name=get_role_name,can_add=True,permission_module='role')
+            if get_permission:
 
-                if not UserRolePermission.objects.filter(role_id=serializer.data.get('id')).exists():
-                    module_list = ['all', 'permissions', 'warehouse', 'role', 'user', 'product', 'product_check_in', 'product_check_out', 'user_activity_log']
-                    create_permission = [
-                        UserRolePermission(role_id=serializer.data.get('id'),permission_module=module) for module in module_list
-                    ]
-                    UserRolePermission.objects.bulk_create(create_permission)
-                return get_serializer_context(serializer.data)      
+                serializer =RoleSerializer(data=request.data)  
+                if  serializer.is_valid():
+                    serializer.save()
+
+                    if not UserRolePermission.objects.filter(role_id=serializer.data.get('id')).exists():
+                        module_list = ['all', 'permissions', 'warehouse', 'role', 'user', 'product', 'product_check_in', 'product_check_out', 'user_activity_log']
+                        create_permission = [
+                            UserRolePermission(role_id=serializer.data.get('id'),permission_module=module) for module in module_list
+                        ]
+                        UserRolePermission.objects.bulk_create(create_permission)
+                    return get_serializer_context(serializer.data)      
+                else:
+                    return get_exception_context(serializer.errors)
             else:
-                return get_exception_context(serializer.errors)
+                return get_exception_context("Unauthorized access!")
 
         except Exception as exception:
            return get_exception_context(str(exception))
@@ -167,14 +197,21 @@ class RoleUpdateApi(APIView):
         uuid = kwargs.get('uid', None)
         print("uuid===",uuid)     
         try:
-            get_role = Role.objects.get(role_uid=uuid)
-            serializer = RoleUpdateSerializer(get_role,data=request.data,partial=True)
-            if  serializer.is_valid():
-                serializer.save()
-                # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
-                return get_serializer_context(serializer.data)
+            user = get_user_from_token(request)
+            get_role_name = user.user_role.role_name
+            get_permission = UserRolePermission.objects.filter(role__role_name=get_role_name,can_update=True,permission_module='role')
+            if get_permission:
+
+                get_role = Role.objects.get(role_uid=uuid)
+                serializer = RoleUpdateSerializer(get_role,data=request.data,partial=True)
+                if  serializer.is_valid():
+                    serializer.save()
+                    # serializer_error = [serializer.errors[error][0] for error in serializer.errors]
+                    return get_serializer_context(serializer.data)
+                else:
+                    return get_exception_context(serializer.errors)
             else:
-                return get_exception_context(serializer.errors)
+                return get_exception_context("Unauthorized access!")
         except Exception as exception:
             return get_exception_context(str(exception))
 # Worked on above code 27/05/2024 By Tasmiya
@@ -184,9 +221,17 @@ class RoleGetApi(APIView):
     
     def get(self,request):
         try:
-            get_role = Role.objects.all().order_by('-id')
-            serializer = RoleSerializer(get_role,many=True)
-            return get_serializer_context(serializer.data)      
+            user = get_user_from_token(request)
+            role_name = user.user_role.role_name
+            get_user_permission = UserRolePermission.objects.filter(role__role_name=role_name, can_list=True, permission_module='role')
+
+            if get_user_permission:
+                get_role = Role.objects.all().prefetch_related('role_permissions').order_by('-id')
+                serializer = RoleSerializerForLogin(get_role,many=True)
+                return get_serializer_context(serializer.data)
+
+            else:
+                return get_exception_context('Unauthorized access!')    
         except Exception as exception:
             return get_exception_context(str(exception))
 # Worked on above code 27/05/2024 By Tasmiya
@@ -197,12 +242,18 @@ class RoleDeleteApi(APIView):
     def delete(self,request,*args,**kwargs):
         uuid = kwargs.get('uid', None)
         try:
-            try:
-                get_role = Role.objects.get(role_uid=uuid)
-                get_role.delete()
-                return get_serializer_context("Role Deleted Successfully !")
-            except Exception as exception:
-                return get_exception_context("Role matching query does not exist !") 
+            user = get_user_from_token(request)
+            role_name = user.user_role.role_name
+            get_permission = UserRolePermission.objects.filter(role__role_name=role_name,can_delete=True,permission_module='role')
+            if get_permission:    
+                try:
+                    get_role = Role.objects.get(role_uid=uuid)
+                    get_role.delete()
+                    return get_serializer_context("Role Deleted Successfully !")
+                except Exception as exception:
+                    return get_exception_context("Role matching query does not exist !") 
+            else:
+                return get_exception_context('Unauthorized access!')
         except Exception as exception:
             return get_exception_context(str(exception))
 # Worked on above code 27/05/2024 By Tasmiya
@@ -212,10 +263,15 @@ class RoleDetailView(APIView):
     
     def get(self,request,uid,*args, **kwargs):
         try:
-            get_role = Role.objects.get(role_uid=uid)
-            serializer = RoleSerializerForLogin(get_role)
-            return get_serializer_context(serializer.data) 
-
+            user = get_user_from_token(request)
+            role_name = user.user_role.role_name
+            get_permission = UserRolePermission.objects.filter(role__role_name=role_name,can_list=True,permission_module='role')
+            if get_permission:   
+                get_role = Role.objects.get(role_uid=uid)
+                serializer = RoleSerializerForLogin(get_role)
+                return get_serializer_context(serializer.data) 
+            else:
+                return get_exception_context('Unauthorized access!')
         except Exception as exception:
             return get_exception_context(str(exception))
 # Added above code on 06/06/2024
@@ -225,9 +281,15 @@ class UserdetailApi(APIView):
     def get(self,request,**kwargs):
         uuid = kwargs.get('uid', None)
         try:
-            get_object = User.objects.select_related('user_role').get(user_uid=uuid)
-            serializer = UserDetailSerializer(get_object)
-            return get_serializer_context(serializer.data)
+            user = get_user_from_token(request)
+            role_name = user.user_role.role_name
+            get_permission = UserRolePermission.objects.filter(role__role_name=role_name,can_list=True,permission_module='user')
+            if get_permission:
+                get_object = User.objects.select_related('user_role').get(user_uid=uuid)
+                serializer = UserDetailSerializer(get_object)
+                return get_serializer_context(serializer.data)
+            else:
+                return get_exception_context('Unauthorized access!')
         except Exception as exception:
              return get_exception_context(str(exception))
         
@@ -238,12 +300,19 @@ class UserDeleteApi(APIView):
     def delete(self,request,*args,**kwargs):
         uuid = kwargs.get('uid', None)
         try:
-            try:
-                get_user = User.objects.get(user_uid=uuid)
-                get_user.delete()
-                return get_serializer_context('User Deleted Successfully !')
-            except Exception as exception:
-                return get_exception_context('User matching query does not exist !')           
+            user = get_user_from_token(request)
+            role_name = user.user_role.role_name
+            get_permission = UserRolePermission.objects.filter(role__role_name=role_name,can_delete=True,permission_module='user')
+            if get_permission:
+                try:
+                    get_user = User.objects.get(user_uid=uuid)
+                    get_user.delete()
+                    return get_serializer_context('User Deleted Successfully !')
+                except Exception as exception:
+                    return get_exception_context('User matching query does not exist !')  
+            else:
+                return get_exception_context('Unauthorized access!')
+
         except Exception as exception:
                 return get_exception_context(str(exception))
 
@@ -252,7 +321,6 @@ class UserDeleteApi(APIView):
 
 # Added below code on 02/07/2024
 def get_obj(i,role_uid):
-    print("i===",i)
     try:
         obj = UserRolePermission.objects.get(uid=i['uid'],role__role_uid=role_uid)
         obj.can_add=i['can_add'] if 'can_add' in i else obj.can_add
@@ -290,6 +358,10 @@ class UpdateRolePermissions(APIView):
 
     def put(self, request, role_uid, *args, **kwargs):
         try:
+            # user = get_user_from_token(request)
+            # role_name = user.user_role.role_name
+            # get_permission = UserRolePermission.objects.filter(role__role_name=role_name,can_update=True,permission_module='permissions')
+            # if get_permission: 
             lst = [get_obj(i,role_uid) for i in request.data['data']]
             context = {
                 'status':status.HTTP_200_OK,
@@ -299,7 +371,10 @@ class UpdateRolePermissions(APIView):
             if len(lst) > 0:
                 context['response'] = 'Permissions Updated Successfully!'
             return Response(context)
+            # else:
+            #     return get_exception_context('Unauthorized access!')
         
         except Exception as exception:
             return get_exception_context(str(exception))
 # Added above code on 02/07/2024
+

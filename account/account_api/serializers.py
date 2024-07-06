@@ -177,7 +177,7 @@ class RoleSerializer(serializers.ModelSerializer):
     #    if get_role_image is None or get_role_image == '':
         #    raise serializers.ValidationError({'error':'image field is required'}) 
 
-       get_role_obj = Role.objects.filter(role_name__icontains=get_role_name)
+       get_role_obj = Role.objects.filter(role_name__iexact=get_role_name)
 
        if get_role_obj.exists():
             raise serializers.ValidationError({'role_name':'role with this name already exists!'})
