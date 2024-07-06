@@ -30,15 +30,21 @@ from account.account_api.serializers import (
     RoleSerializer,
     RoleUpdateSerializer,
     RoleSerializerForLogin,
-    
-    
 )
 from account.helpers import (
     get_exception_context,
     get_serializer_context,
+    get_user_from_token,
 )
-from account.helpers import get_user_from_token
 
+from rest_framework import viewsets
+from rest_framework import filters as search_fil 
+from django_filters.rest_framework import DjangoFilterBackend
+from product.filters import (
+    RoleFilter,
+    UserFilter
+)
+from django.core.paginator import Paginator
 
 
 class RegisterAPI(APIView):
@@ -140,19 +146,48 @@ class UserUpdateView(APIView):
             return get_exception_context(str(exception))
 
 
-class UserListView(ListAPIView):
-    def get(self, request, *args, **kwargs):
+# class UserListView(ListAPIView):
+#     def get(self, request, *args, **kwargs):
+#         try:
+#             get_user_qs = User.objects.filter(is_superuser=False).select_related('user_role').order_by('id')
+#             serializer = UserListSerializer(get_user_qs,many=True)
+#             return get_serializer_context(serializer.data)
+
+#         except Exception as exception:
+#             return get_exception_context(str(exception))
+
+class UserListView(viewsets.ModelViewSet):
+    serializer_class = UserListSerializer
+    queryset = User.objects.filter(is_superuser=False).select_related('user_role').order_by('id')
+    filter_backends = (DjangoFilterBackend,search_fil.SearchFilter)
+    # filterset_class = UserFilter
+    search_fields = ['email','username']
+    def list(self, request, *args, **kwargs):
         try:
             user = get_user_from_token(request)
             get_role_name = user.user_role.role_name
             get_permission = UserRolePermission.objects.filter(role__role_name=get_role_name,can_list=True,permission_module='user')
             if get_permission:
-
-                get_user_qs = User.objects.filter(is_superuser=False).select_related('user_role').order_by('id')
-                serializer = UserListSerializer(get_user_qs,many=True)
-                return get_serializer_context(serializer.data)
+                page = request.GET.get('page',1)
+                limit = request.GET.get('limit',10)
+                get_user_qs = self.filter_queryset(self.get_queryset())
+                paginator = Paginator(get_user_qs,limit)
+                get_page = paginator.page(page)
+                total_page = paginator.num_pages
+                serializer = self.serializer_class(get_page,many=True)
+                context = {
+                    'status':status.HTTP_200_OK,
+                    'succes':True,
+                    'current_page':page,
+                    'total_page':total_page,
+                    'next_page':False if int(page) == total_page else True,
+                    'response':serializer.data
+                }
+                return Response(context,status=status.HTTP_200_OK)
+                
             else:
                 return get_exception_context("Unauthorized access!")
+            
 
         except Exception as exception:
             return get_exception_context(str(exception))
@@ -217,24 +252,53 @@ class RoleUpdateApi(APIView):
 # Worked on above code 27/05/2024 By Tasmiya
             
 # Worked on below code 27/05/2024 By Tasmiya  
-class RoleGetApi(APIView):
+# class RoleGetApi(APIView):
     
-    def get(self,request):
+#     def get(self,request):
+#         try:
+#             get_role = Role.objects.all().prefetch_related('role_permissions').order_by('-id')
+#             serializer = RoleSerializer(get_role,many=True)
+#             return get_serializer_context(serializer.data)      
+#         except Exception as exception:
+#             return get_exception_context(str(exception))
+# Worked on above code 27/05/2024 By Tasmiya
+
+class RoleGetApi(viewsets.ModelViewSet):
+    serializer_class = RoleSerializerForLogin
+    queryset = Role.objects.all().prefetch_related('role_permissions').order_by('-id')
+    filter_backends = (DjangoFilterBackend,search_fil.SearchFilter)
+    # filterset_class = RoleFilter 
+    search_fields = ['role_name','status']
+    
+    def list(self,request):
         try:
             user = get_user_from_token(request)
             role_name = user.user_role.role_name
             get_user_permission = UserRolePermission.objects.filter(role__role_name=role_name, can_list=True, permission_module='role')
 
             if get_user_permission:
-                get_role = Role.objects.all().prefetch_related('role_permissions').order_by('-id')
-                serializer = RoleSerializerForLogin(get_role,many=True)
-                return get_serializer_context(serializer.data)
+                page = request.GET.get('page',1)
+                limit = request.GET.get('limit',10)
+                get_role = self.filter_queryset(self.get_queryset())
+                paginator = Paginator(get_role,limit)
+                get_page = paginator.get_page(page)
+                total_page = paginator.count
+                serializer = self.serializer_class(get_page,many=True)
+                context = {
+                    'status':status.HTTP_200_OK,
+                    'success':True,
+                    'current_page':page,
+                    'total_page':total_page,
+                    'next_page':False if int(page)==total_page else True,
+                    'response':serializer.data
+                }
+                return Response(context,status=status.HTTP_200_OK) 
 
             else:
                 return get_exception_context('Unauthorized access!')    
+                 
         except Exception as exception:
             return get_exception_context(str(exception))
-# Worked on above code 27/05/2024 By Tasmiya
 
 # Worked on below code 27/05/2024 By Tasmiya  
 class RoleDeleteApi(APIView):
@@ -267,7 +331,7 @@ class RoleDetailView(APIView):
             role_name = user.user_role.role_name
             get_permission = UserRolePermission.objects.filter(role__role_name=role_name,can_list=True,permission_module='role')
             if get_permission:   
-                get_role = Role.objects.get(role_uid=uid)
+                get_role = Role.objects.prefetch_related('role_permissions').get(role_uid=uid)
                 serializer = RoleSerializerForLogin(get_role)
                 return get_serializer_context(serializer.data) 
             else:

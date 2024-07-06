@@ -58,10 +58,22 @@ class Product(BaseModel):
     find_my_mac = models.BooleanField(default=False,null=True)
     mdm = models.BooleanField(default=False,null=True)
     created_by = models.ForeignKey(User, related_name="created_by_user", on_delete=models.CASCADE, blank=True, null=True) # Added on 05/06/2024
-
     bar_code  = models.FileField(upload_to='bar_code/',blank=True, null=True) # Added on 05/06/2024
     apple_care = models.BooleanField(default=False,blank=True,null=True) # Added on 19/06/2024 By Tasmiya
-    bar_code_number  = models.CharField(max_length=255,editable=False,blank=True, null=True) # Added on 21/06/2024
+    bar_code_number  = models.CharField(max_length=255,editable=False,blank=True,null=True) # Added on 21/06/2024
+    cpu = models.TextField(blank=True,null=True) # Added on 27/06/2024
+    gpu = models.TextField(blank=True,null=True) # Added on 27/06/2024
+    source = models.TextField(blank=True,null=True)  # Added on 1/07/2024
+    top_grade = models.CharField(max_length=50,blank=True,null=True) # Added on 1/07/2024
+    lcd_grade = models.CharField(max_length=50,blank=True,null=True) # Added on 6/07/2024
+    
+
+
+    def save(self, *args, **kwargs): # Added on 27/06/2024
+       
+        if self.serial_number:
+            self.serial_number = self.serial_number.upper()
+        super().save(*args, **kwargs)
 
 
     def __str__(self):
@@ -69,23 +81,6 @@ class Product(BaseModel):
     
     class Meta:
         verbose_name_plural = 'Product'
-
-    
-    # def save(self, *args, **kwargs):
-
-    #     if self.id:
-    #         number = f"AFP000{self.id}"
-        
-    #     else:
-    #         number = "AFP0001"
-
-    #     ean = barcode.codex.Code39(number, add_checksum=False)
-    #     unique_filename = uuid.uuid4()
-    #     filename = ean.save(unique_filename)
-    #     if not self.bar_code:
-    #         self.bar_code = filename
-
-    #     return super(Product, self).save(*args, **kwargs)
 
 
 class ProductImage(BaseModel):
@@ -111,12 +106,13 @@ class WipingQuestionnaire(BaseModel):
     data_wiped = models.BooleanField(default=False,null=True,blank=True)
     software_used = models.TextField(blank=True,null=True)
     software_reason = models.TextField(blank=True,null=True)
+    checkin_signature = models.ImageField(upload_to='employee_checkin_signature/',blank=True,null=True) # Added on 6/07/2024
 
     def __str__(self):
         return self.first_name
     
     class Meta:
-        verbose_name_plural = 'Wiping Questionnair'
+        verbose_name_plural = 'Product Checkin (Wiping Questionnair)'
 
 
 class ProductCheckOut(BaseModel):
@@ -124,6 +120,7 @@ class ProductCheckOut(BaseModel):
     item_moved_to = models.CharField(max_length=255, blank=True, null=True)
     first_name = models.CharField(max_length=200,blank=True,null=True)
     last_name = models.CharField(max_length=200,blank=True,null=True)
+    checkout_signature = models.ImageField(upload_to='employee_checkout_signature/',blank=True,null=True) # Added on 6/07/2024
 
     class Meta: 
         verbose_name_plural = 'Product Checkout'

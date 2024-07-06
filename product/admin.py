@@ -10,7 +10,7 @@ from product.models import (
 # Register your models here.
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['uid','serial_number','device_type','warehouse','model_number','model_family','storage_type','product_status','bar_code_number']
+    list_display = ['uid','serial_number','device_type','warehouse','storage_type','product_status','bar_code_number','created_at']
 
 class WareHouseAdmin(admin.ModelAdmin):
     list_display = ['uid','warehouse_name']

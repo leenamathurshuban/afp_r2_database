@@ -225,6 +225,7 @@ class RoleSerializerForLogin(serializers.ModelSerializer):
 class UserLoginSerializer(serializers.ModelSerializer):
     user_role = RoleSerializerForLogin()
 
+
     class Meta:
         model = User
         fields = ['id','user_uid','username','user_role']

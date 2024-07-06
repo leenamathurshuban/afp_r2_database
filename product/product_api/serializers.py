@@ -43,7 +43,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate(self, attrs):
-      
+        #  print('attrs===',attrs)
          get_serial_number = attrs.get('serial_number',None)
          get_year = attrs.get('year',None)
          get_product_size = attrs.get('product_size',None)
@@ -60,7 +60,11 @@ class ProductSerializer(serializers.ModelSerializer):
          get_grade = attrs.get('grade',None)
          get_grade_notes = attrs.get('grade_notes',None)
          get_technical_notes = attrs.get('technical_notes',None)
-         
+         get_cpu = attrs.get('cpu',None)
+         get_gpu = attrs.get('gpu',None)
+         get_source = attrs.get('source',None)
+         get_top_grade = attrs.get('top_grade',None)
+         get_lcd_grade = attrs.get('lcd_grade',None)
 
          
          if get_serial_number is None or get_serial_number == '':
@@ -110,6 +114,23 @@ class ProductSerializer(serializers.ModelSerializer):
          
          if get_technical_notes is None or get_technical_notes == '':
             raise serializers.ValidationError({'technical_notes':'technical_notes is required'})
+         
+         if get_cpu is None or get_cpu == '':
+             raise serializers.ValidationError({'CPU':'CPU is required'})
+         
+         if get_gpu is None or get_gpu == '':
+             raise serializers.ValidationError({'GPU':'GPU is required'})
+
+         if get_source is None or get_source == '':
+             raise serializers.ValidationError({'source':'source is required'})
+         
+         if get_top_grade is None or get_top_grade == '':
+             raise serializers.ValidationError({'top_grade':'top_grade is required'})
+
+         if get_lcd_grade is None or get_lcd_grade == '':
+             raise serializers.ValidationError({'lcd_grade':'lcd_grade is required'})
+         
+         
             
          get_product_instance = Product.objects.filter(warehouse= attrs['warehouse'],
                                                       serial_number=get_serial_number,
@@ -120,18 +141,15 @@ class ProductSerializer(serializers.ModelSerializer):
                                                       storage_size= get_storage_size,
                                                       )
 
-         print('get_product_instance:-===', get_product_instance)
+        #  print('get_product_instance:-===', get_product_instance)
 
          if get_product_instance.exists():
                raise serializers.ValidationError({'error':'Product already Checked-in!'})
          
+         
          return attrs
 
-
     
-      
-
-
 # Added below code on 05/06/2024
 class UserListSerializerForProduct(serializers.ModelSerializer):
 
@@ -143,8 +161,6 @@ class ProductImageSerializer(serializers.ModelSerializer):
    class Meta:
       model = ProductImage
       fields = ['id','uid','product','image']
-
-
 
 
 class ProductUpdateSerializer(serializers.ModelSerializer):
@@ -244,7 +260,6 @@ class ProductdetailSerializer(serializers.ModelSerializer):
        return data
 
 
-
 class GetProductListSerializer(serializers.ModelSerializer):
     warehouse = WareHouseSerializer()
     created_by = UserListSerializerForProduct()
@@ -303,6 +318,8 @@ class WipingQuestionSerializer(serializers.ModelSerializer):
         get_software_reason = attrs.get('software_reason',None)
         get_first_name = attrs.get('first_name',None)
         get_last_name = attrs.get('last_name',None)
+        get_checkin_signature = attrs.get('checkin_signature',None)
+
 
         if get_data_wiped is None:
             raise serializers.ValidationError({'data_wiped':'data_wiped is required'})
@@ -320,6 +337,9 @@ class WipingQuestionSerializer(serializers.ModelSerializer):
         
         if get_last_name is None or get_last_name == '':
             raise serializers.ValidationError({'last_name':'last_name is rquired'})
+        
+        if get_checkin_signature is None or get_checkin_signature == '':
+             raise serializers.ValidationError({'checkin_signature':'checkin_signature is required'})
         
         # datawiped1 = Q(data_wiped=True)
         # print('datawiped1====',datawiped1)
@@ -378,6 +398,7 @@ class ProductCheckOutSerializer(serializers.ModelSerializer):
         get_item_moved_to = attrs.get('item_moved_to',None)
         get_first_name = attrs.get('first_name',None)
         get_last_name = attrs.get('last_name',None)
+        get_checkout_signature = attrs.get('checkout_signature',None)
 
         if get_item_moved_to is None or get_item_moved_to == '':
             raise serializers.ValidationError({'item_moved_to':'item_moved_to is required!'})
@@ -387,6 +408,9 @@ class ProductCheckOutSerializer(serializers.ModelSerializer):
         
         if get_last_name is None or get_last_name == '':
             raise serializers.ValidationError({'last_name':'last_name is required!'})
+        
+        if get_checkout_signature is None or get_checkout_signature == '':
+             raise serializers.ValidationError({'checkout_signature':'checkout_signature is required'})
         
 
         get_product = ProductCheckOut.objects.filter(product=attrs['product'],
@@ -411,3 +435,24 @@ class ProductCheckoutGetSerializer(serializers.ModelSerializer):
 
 # Worked on above code 14/06/2024 By Tasmiya
 
+class ProductSerializerForMultipleProduct(serializers.ModelSerializer):
+      wiping_product = WipingQuestionSerializerForProductDetail(many=True)
+      product_checkout  = ProductCheckOutSerializerForProductDetail(many=True)
+      warehouse = WareHouseSerializer()
+      created_by = UserListSerializerForProduct()
+      product_image = ProductImageSerializer(many=True)
+
+      class Meta:
+         model = Product
+         fields = '__all__'
+
+
+class DashBoardSerializer(serializers.ModelSerializer):
+    wiping_product = WipingQuestionSerializerForProductDetail(many=True)
+    product_checkout  = ProductCheckOutSerializerForProductDetail(many=True)
+    warehouse = WareHouseSerializer()
+    created_by = UserListSerializerForProduct()
+    product_image = ProductImageSerializer(many=True)
+    class Meta:
+        model = Product
+        fields = '__all__'
