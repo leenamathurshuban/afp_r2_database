@@ -443,12 +443,3 @@ class ProductSerializerForMultipleProduct(serializers.ModelSerializer):
          fields = '__all__'
 
 
-class DashBoardSerializer(serializers.ModelSerializer):
-    wiping_product = WipingQuestionSerializerForProductDetail(many=True)
-    product_checkout  = ProductCheckOutSerializerForProductDetail(many=True)
-    warehouse = WareHouseSerializer()
-    created_by = UserListSerializerForProduct()
-    product_image = ProductImageSerializer(many=True)
-    class Meta:
-        model = Product
-        fields = '__all__'

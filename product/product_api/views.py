@@ -35,7 +35,7 @@ from product.product_api.serializers import (
     ProductCheckoutGetSerializer,
 
     ProductSerializerForMultipleProduct,
-    DashBoardSerializer
+    
 )
 from account.models import (
     User
@@ -149,57 +149,6 @@ class DetailWareHouse(APIView):
 
 # Worked on above code 27/05/2024 By Tasmiya
 
-
-# class ProductPostApi(APIView):
-#     def post(self,request,*args,**Kwargs):
-#         try:
-#             get_warehouse = request.data.get('warehouse_uid',None)
-#             if get_warehouse is None or get_warehouse == '':
-#                 return get_exception_context({'warehouse_uid':['warehouse_uid is required']})
-
-#             request.data._mutable = True
-#             get_warehouse=WareHouse.objects.get(uid=request.data['warehouse_uid'])
-
-#             get_super_user_for_testing = User.objects.get(is_superuser=True)
-#             request.data['warehouse'] = get_warehouse.id
-#             request.data['created_by'] = get_super_user_for_testing.id
-#             request.data._mutable = False
-
-#             get_product_image = request.FILES.getlist('product_image')
-
-#             serializer = ProductSerializer(data=request.data)
-#             if serializer.is_valid():
-#                 serializer.save()
-
-#                 get_product_id = serializer.data.get('id')
-
-#                 # Added below code on 20/06/2024
-#                 serial_number = serializer.data.get('serial_number')
-#                 get_barcode_name = f'AFP{serial_number}{get_product_id}'
-#                 from barcode.writer import ImageWriter
-#                 import uuid
-
-#                 ean = barcode.codex.Code128(get_barcode_name, writer=ImageWriter())
-#                 unique_filename = uuid.uuid4()
-
-#                 get_product_obj = Product.objects.get(id=get_product_id)
-#                 get_product_obj.bar_code = ean.save(f'media/bar_code/{unique_filename}')
-#                 get_product_obj.bar_code_number = get_barcode_name
-#                 get_product_obj.save()
-#                 # Added above code on 20/06/2024
-
-#                 if get_product_image:
-#                     for image in get_product_image:
-#                         create_image_obj = ProductImage.objects.create(product_id=get_product_id, image=image, type='uploaded')
-#                 # else:
-#                 #     create_image_obj = ProductImage.objects.create(product_id=get_product_id, image='product_image/default_product_image.jpg', type='default')
-
-#                 return get_serializer_context(serializer.data)
-#             else:
-#                 return get_exception_context(serializer.errors)
-            
-#         except Exception as exception:
-#             return get_exception_context(str(exception))
 
 class ProductPostApi(APIView):
     def post(self,request,*args,**Kwargs):

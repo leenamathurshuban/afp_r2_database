@@ -66,7 +66,7 @@ class Product(BaseModel):
     source = models.TextField(blank=True,null=True)  # Added on 1/07/2024
     top_grade = models.CharField(max_length=50,blank=True,null=True) # Added on 1/07/2024
     lcd_grade = models.CharField(max_length=50,blank=True,null=True) # Added on 6/07/2024
-    signature = models.ImageField(upload_to='employee_signature/',blank=True,null=True) # Added on 6/07/2024
+    
 
 
     def save(self, *args, **kwargs): # Added on 27/06/2024
@@ -106,7 +106,7 @@ class WipingQuestionnaire(BaseModel):
     data_wiped = models.BooleanField(default=False,null=True,blank=True)
     software_used = models.TextField(blank=True,null=True)
     software_reason = models.TextField(blank=True,null=True)
-
+    checkin_signature = models.ImageField(upload_to='employee_checkin_signature/',blank=True,null=True) # Added on 6/07/2024
     def __str__(self):
         return self.first_name
     
@@ -119,7 +119,7 @@ class ProductCheckOut(BaseModel):
     item_moved_to = models.CharField(max_length=255, blank=True, null=True)
     first_name = models.CharField(max_length=200,blank=True,null=True)
     last_name = models.CharField(max_length=200,blank=True,null=True)
-
+    checkout_signature = models.ImageField(upload_to='employee_checkout_signature/',blank=True,null=True) # Added on 6/07/2024
     class Meta: 
         verbose_name_plural = 'Product Checkout'
     
