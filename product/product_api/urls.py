@@ -30,14 +30,15 @@ from product.product_api.views import (
     ProductCheckOutDeleteApi,
     MultipleProductForDetailApi,
 
-    generate_barcode, # For testing Purpose
+    generate_barcode,
+    DashBoardAPI 
     
 )
 
 urlpatterns = [
 path('ware-house-post-api/',PostWareHouse.as_view(),name='post-ware-house-api'),
 path('ware-house-update-api/<str:uid>/',UpdateWareHouse.as_view(),name="role-update-api"),
-path('ware-house-list-api/',GetWareHouseList.as_view(),name='ware-house-get-api'),
+path('ware-house-list-api/',GetWareHouseList.as_view({'get':'list'}),name='ware-house-get-api'),
 path('ware-house-delete-api/<str:uid>/',DeleteWareHouse.as_view(),name='ware-house-delete-api'),
 path('ware-house-detail-api/<str:uid>/',DetailWareHouse.as_view(),name='ware-house-detail-api'),
 
@@ -47,7 +48,7 @@ path('product-delete-api/<str:uid>/',ProductDeleteApi.as_view(),name='product-de
 path('product-update-api/<str:uid>/',ProductUpdateApi.as_view(),name='product-update-api'),
 path('product-detail-api/<str:uid>/',ProductDetailApi.as_view(),name='product-detail-api'),
 path('multiple-product-detail-api/',MultipleProductForDetailApi.as_view(),name='multiple-product-detail-api'),
-path('product-list-view/',GetProductListAPI.as_view(),name='product-list-view'),
+path('product-list-view/',GetProductListAPI.as_view({'get':'list'}),name='product-list-view'),
 path('bar-code-product-detail/<str:bar_code_number>/',GetProductDetailByBarCodeAPI.as_view(),name='bar-code-product-detail'),# Added on 21/06/2024
 
 path('product-image-delete-api/<str:uid>/',ProductImageDeleteApi.as_view(),name="product-image-delete-api"),
@@ -64,8 +65,9 @@ path('product-checkout-get-api/<str:uid>/',ProductCheckOutGetApi.as_view(),name=
 path('product-checkout-list-api/',ProductCheckOutListApi.as_view(),name='product-check-list-api'),
 path('product-checkout-delete-api/<str:uid>/',ProductCheckOutDeleteApi.as_view(),name='product-checkout-delete-api'),
 
-
 path('bar-code/',generate_barcode.as_view()), # For testing Purpose
+path('dashboard-api/',DashBoardAPI.as_view(),name='dashboard-api'),
+
 
 
 

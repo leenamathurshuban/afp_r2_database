@@ -19,7 +19,7 @@ class RoleAdmin(admin.ModelAdmin):
 class UserRolePermissionAdmin(admin.ModelAdmin):
     list_display = ['uid','role','permission_module','can_add','can_update','can_list','can_delete','can_do_all']
 
-    search_fields = ['user_role__role_name','permission_module']
+    search_fields = ['role__role_name','permission_module']
     
 
 from django.contrib.admin.models import LogEntry

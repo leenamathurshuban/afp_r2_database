@@ -43,7 +43,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate(self, attrs):
-      
+        #  print('attrs===',attrs)
          get_serial_number = attrs.get('serial_number',None)
          get_year = attrs.get('year',None)
          get_product_size = attrs.get('product_size',None)
@@ -64,7 +64,8 @@ class ProductSerializer(serializers.ModelSerializer):
          get_gpu = attrs.get('gpu',None)
          get_source = attrs.get('source',None)
          get_top_grade = attrs.get('top_grade',None)
-         
+         get_lcd_grade = attrs.get('lcd_grade',None)
+         get_signature = attrs.get('signature',None)
 
          
          if get_serial_number is None or get_serial_number == '':
@@ -114,6 +115,24 @@ class ProductSerializer(serializers.ModelSerializer):
          
          if get_technical_notes is None or get_technical_notes == '':
             raise serializers.ValidationError({'technical_notes':'technical_notes is required'})
+         
+         if get_cpu is None or get_cpu == '':
+             raise serializers.ValidationError({'CPU':'CPU is required'})
+         
+         if get_gpu is None or get_gpu == '':
+             raise serializers.ValidationError({'GPU':'GPU is required'})
+
+         if get_source is None or get_source == '':
+             raise serializers.ValidationError({'source':'source is required'})
+         
+         if get_top_grade is None or get_top_grade == '':
+             raise serializers.ValidationError({'top_grade':'top_grade is required'})
+
+         if get_lcd_grade is None or get_lcd_grade == '':
+             raise serializers.ValidationError({'lcd_grade':'lcd_grade is required'})
+         
+         if get_signature is None or get_signature == '':
+             raise serializers.ValidationError({'signature':'signature is required'})
             
          get_product_instance = Product.objects.filter(warehouse= attrs['warehouse'],
                                                       serial_number=get_serial_number,
@@ -124,20 +143,11 @@ class ProductSerializer(serializers.ModelSerializer):
                                                       storage_size= get_storage_size,
                                                       )
 
+        #  print('get_product_instance:-===', get_product_instance)
+
          if get_product_instance.exists():
                raise serializers.ValidationError({'error':'Product already Checked-in!'})
          
-         if get_cpu is None or get_cpu == '':
-             raise serializers.ValidationError({'CPU':'CPU is required'})
-         
-         if get_gpu is None or get_gpu == '':
-             raise serializers.ValidationError({'GPU':'GPU is required'})
-         
-         if get_source is None or get_source == '':
-             raise serializers.ValidationError({'source':'source is required'})
-         
-         if get_top_grade is None or get_top_grade == '':
-             raise serializers.ValidationError({'top_grade':'top_grade is required'})
          
          return attrs
 
@@ -431,3 +441,14 @@ class ProductSerializerForMultipleProduct(serializers.ModelSerializer):
       class Meta:
          model = Product
          fields = '__all__'
+
+
+class DashBoardSerializer(serializers.ModelSerializer):
+    wiping_product = WipingQuestionSerializerForProductDetail(many=True)
+    product_checkout  = ProductCheckOutSerializerForProductDetail(many=True)
+    warehouse = WareHouseSerializer()
+    created_by = UserListSerializerForProduct()
+    product_image = ProductImageSerializer(many=True)
+    class Meta:
+        model = Product
+        fields = '__all__'

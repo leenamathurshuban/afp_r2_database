@@ -58,7 +58,6 @@ class Product(BaseModel):
     find_my_mac = models.BooleanField(default=False,null=True)
     mdm = models.BooleanField(default=False,null=True)
     created_by = models.ForeignKey(User, related_name="created_by_user", on_delete=models.CASCADE, blank=True, null=True) # Added on 05/06/2024
-
     bar_code  = models.FileField(upload_to='bar_code/',blank=True, null=True) # Added on 05/06/2024
     apple_care = models.BooleanField(default=False,blank=True,null=True) # Added on 19/06/2024 By Tasmiya
     bar_code_number  = models.CharField(max_length=255,editable=False,blank=True,null=True) # Added on 21/06/2024
@@ -66,6 +65,8 @@ class Product(BaseModel):
     gpu = models.TextField(blank=True,null=True) # Added on 27/06/2024
     source = models.TextField(blank=True,null=True)  # Added on 1/07/2024
     top_grade = models.CharField(max_length=50,blank=True,null=True) # Added on 1/07/2024
+    lcd_grade = models.CharField(max_length=50,blank=True,null=True) # Added on 6/07/2024
+    signature = models.ImageField(upload_to='employee_signature/',blank=True,null=True) # Added on 6/07/2024
 
 
     def save(self, *args, **kwargs): # Added on 27/06/2024
