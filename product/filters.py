@@ -10,7 +10,6 @@ from account.models import (
     User
 )
 
-
 class ProductFilter(filters.FilterSet):
     date = filters.DateFromToRangeFilter(field_name='created_at')
     class Meta:
@@ -18,12 +17,10 @@ class ProductFilter(filters.FilterSet):
         fields = ['date']
 
 
-
 class WareHouseFilter(django_filters.FilterSet):
     class Meta:
         model = WareHouse
         fields = ['warehouse_name']
-
 
 
 class RoleFilter(django_filters.FilterSet):

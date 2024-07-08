@@ -17,7 +17,7 @@ class Role(models.Model):
 
     role_uid = models.UUIDField(editable=False,default=uuid.uuid4,unique=True,blank=True)
     role_name = models.CharField(max_length=100,blank=True, null=True,unique=True)
-    status = models.CharField(max_length=20,choices=status_choice,blank=True,null=True,)
+    status = models.CharField(max_length=20,choices=status_choice,blank=True,null=True,default='Active')
     image = models.ImageField(upload_to='role_image/',default='role_image/default_role_image.png', blank=True,null=True)
     created_at = models.DateTimeField(auto_now_add=True,null=True)
     updated_at = models.DateTimeField(auto_now=True,null=True)

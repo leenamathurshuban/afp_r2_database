@@ -19,10 +19,13 @@ def get_serializer_context(serializer=None):
     return Response(context,status=status.HTTP_200_OK)
 
 
+from rest_framework_simplejwt.backends import TokenBackend
+from account.models import User
 
-
-
-
-        
-
-
+def get_user_from_token(request):
+    
+    token = request.META.get('HTTP_AUTHORIZATION', " ").split(' ')[1]
+    valid_data = TokenBackend(algorithm='HS256').decode(token,verify=False)
+    get_logged_in_user = valid_data['user_id']
+    get_user = User.objects.get(id=get_logged_in_user)
+    return get_user

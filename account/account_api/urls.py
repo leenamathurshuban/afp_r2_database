@@ -18,7 +18,7 @@ from account.account_api.views import (
     RoleDetailView,
 
     UpdateRolePermissions,
-    
+
 )
 
 urlpatterns = [
@@ -39,5 +39,5 @@ urlpatterns = [
     path('role-detail-view/<str:uid>/',RoleDetailView.as_view(),name="role-detail-view"),
 
     path('update-role-permissions/<str:role_uid>/',UpdateRolePermissions.as_view(),name="update-role-permissions"), # Added on 02/07/2024
-    
+
 ]

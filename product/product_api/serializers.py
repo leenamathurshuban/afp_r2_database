@@ -65,7 +65,6 @@ class ProductSerializer(serializers.ModelSerializer):
          get_source = attrs.get('source',None)
          get_top_grade = attrs.get('top_grade',None)
          get_lcd_grade = attrs.get('lcd_grade',None)
-         get_signature = attrs.get('signature',None)
 
          
          if get_serial_number is None or get_serial_number == '':
@@ -131,8 +130,7 @@ class ProductSerializer(serializers.ModelSerializer):
          if get_lcd_grade is None or get_lcd_grade == '':
              raise serializers.ValidationError({'lcd_grade':'lcd_grade is required'})
          
-         if get_signature is None or get_signature == '':
-             raise serializers.ValidationError({'signature':'signature is required'})
+         
             
          get_product_instance = Product.objects.filter(warehouse= attrs['warehouse'],
                                                       serial_number=get_serial_number,
@@ -163,8 +161,6 @@ class ProductImageSerializer(serializers.ModelSerializer):
    class Meta:
       model = ProductImage
       fields = ['id','uid','product','image']
-
-
 
 
 class ProductUpdateSerializer(serializers.ModelSerializer):
@@ -264,7 +260,6 @@ class ProductdetailSerializer(serializers.ModelSerializer):
        return data
 
 
-
 class GetProductListSerializer(serializers.ModelSerializer):
     warehouse = WareHouseSerializer()
     created_by = UserListSerializerForProduct()
@@ -323,6 +318,8 @@ class WipingQuestionSerializer(serializers.ModelSerializer):
         get_software_reason = attrs.get('software_reason',None)
         get_first_name = attrs.get('first_name',None)
         get_last_name = attrs.get('last_name',None)
+        get_checkin_signature = attrs.get('checkin_signature',None)
+
 
         if get_data_wiped is None:
             raise serializers.ValidationError({'data_wiped':'data_wiped is required'})
@@ -340,6 +337,9 @@ class WipingQuestionSerializer(serializers.ModelSerializer):
         
         if get_last_name is None or get_last_name == '':
             raise serializers.ValidationError({'last_name':'last_name is rquired'})
+        
+        if get_checkin_signature is None or get_checkin_signature == '':
+             raise serializers.ValidationError({'checkin_signature':'checkin_signature is required'})
         
         # datawiped1 = Q(data_wiped=True)
         # print('datawiped1====',datawiped1)
@@ -398,6 +398,7 @@ class ProductCheckOutSerializer(serializers.ModelSerializer):
         get_item_moved_to = attrs.get('item_moved_to',None)
         get_first_name = attrs.get('first_name',None)
         get_last_name = attrs.get('last_name',None)
+        get_checkout_signature = attrs.get('checkout_signature',None)
 
         if get_item_moved_to is None or get_item_moved_to == '':
             raise serializers.ValidationError({'item_moved_to':'item_moved_to is required!'})
@@ -407,6 +408,9 @@ class ProductCheckOutSerializer(serializers.ModelSerializer):
         
         if get_last_name is None or get_last_name == '':
             raise serializers.ValidationError({'last_name':'last_name is required!'})
+        
+        if get_checkout_signature is None or get_checkout_signature == '':
+             raise serializers.ValidationError({'checkout_signature':'checkout_signature is required'})
         
 
         get_product = ProductCheckOut.objects.filter(product=attrs['product'],

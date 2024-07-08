@@ -106,12 +106,13 @@ class WipingQuestionnaire(BaseModel):
     data_wiped = models.BooleanField(default=False,null=True,blank=True)
     software_used = models.TextField(blank=True,null=True)
     software_reason = models.TextField(blank=True,null=True)
-    checkin_signature = models.ImageField(upload_to='employee_checkin_signature/',blank=True,null=True) # Added on 6/07/2024
+    checkin_signature = models.CharField(max_length=255,blank=True,null=True) # Added on 6/07/2024
+    
     def __str__(self):
         return self.first_name
     
     class Meta:
-        verbose_name_plural = 'Wiping Questionnair'
+        verbose_name_plural = 'Product Checkin (Wiping Questionnair)'
 
 
 class ProductCheckOut(BaseModel):
@@ -119,7 +120,8 @@ class ProductCheckOut(BaseModel):
     item_moved_to = models.CharField(max_length=255, blank=True, null=True)
     first_name = models.CharField(max_length=200,blank=True,null=True)
     last_name = models.CharField(max_length=200,blank=True,null=True)
-    checkout_signature = models.ImageField(upload_to='employee_checkout_signature/',blank=True,null=True) # Added on 6/07/2024
+    checkout_signature = models.CharField(max_length=255,blank=True,null=True) # Added on 6/07/2024
+    
     class Meta: 
         verbose_name_plural = 'Product Checkout'
     
